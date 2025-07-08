@@ -14,6 +14,7 @@ const lightc = new THREE.DirectionalLightHelper(directionalLight, 4)
 
 scene.add(directionalLight);
 scene.add(lightc)
+directionalLight.intensity = 0
 
 const sizes = {
     width: window.innerWidth,
@@ -35,7 +36,7 @@ renderer.setClearColor(0x2e2d2b);
 const gltfLoader = new GLTFLoader();
 let mixer;
 
-gltfLoader.load("./Datsun.glb", (gltf) => {
+gltfLoader.load("./Assets/Datsun.glb", (gltf) => {
     gltf.scene.scale.set(2, 2, 2);
     scene.add(gltf.scene);
 
@@ -62,8 +63,8 @@ function animate() {
     //controls.update();
     const delta = clock.getDelta();
     if (mixer) mixer.update(delta);
-    directionalLight.intensity = scrollProgress * 1.5;
-    camera.position.z = 27 + scrollProgress / 2;
+    // directionalLight.intensity = scrollProgress * 9;
+    // camera.position.z = 27 + scrollProgress / 2;
     renderer.render(scene, camera);
 }
 animate();
@@ -72,4 +73,49 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+});
+
+gsap.to(directionalLight, {
+    scrollTrigger: {
+        trigger: "#hero",
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+    },
+    intensity: 10,
+});
+
+gsap.to(camera.position, {
+    scrollTrigger: {
+        trigger: "#hero",
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+    },
+    z: 28, // Move camera along the Z axis (further away for better view)
+});
+
+gsap.to(camera.position, {
+  scrollTrigger: {
+    trigger: "#section-3",  // Trigger action when section 3 is in view
+    start: "top center",  // Trigger when the top of the section reaches the center of the viewport
+    end: "bottom top",  // End when the bottom of the section reaches the top of the viewport
+    scrub: true,  // Smoothly scrub through the animation as you scroll
+  },
+  x: 40,  // Move camera along the X axis
+  y: 2,  // Move camera along the Y axis
+  z: 10, // Move camera along the Z axis (further away for better view)
+  duration: 1,  // Optional duration (scrub should make this feel continuous)
+});
+
+gsap.to(camera.rotation, {
+  scrollTrigger: {
+    trigger: "#section-3",  // Trigger action when section 3 is in view
+    start: "top center",  // Trigger when the top of the section reaches the center of the viewport
+    end: "bottom top",  // End when the bottom of the section reaches the top of the viewport
+    scrub: true,  // Smoothly scrub through the animation as you scroll
+    markers: true,  // Enable markers for debugging (you can remove this in production)
+  },
+//   x: Math.PI / 4,  // Rotate camera by 45° (π/4 radians) on the X axis
+  y: Math.PI / 2,  // Rotate camera by 90° (π/2 radians) on the Y axis
 });

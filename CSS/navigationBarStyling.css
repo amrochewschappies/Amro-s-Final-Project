@@ -1,0 +1,156 @@
+header{
+    position: fixed;
+    width: 100%;
+}
+
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #00000000; /* similar to the image */
+    font-family: sans-serif;
+}
+
+.navbar-left .navbar-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    letter-spacing: 2px;
+}
+
+/* Right section */
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Circle icon */
+.circle-btn {
+    background-color: #e4e4f0;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    line-height: 0;
+    cursor: pointer;
+}
+
+/* LET'S TALK button */
+.talk-btn {
+    background-color: #22232c;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 0.6rem 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* MENU button & dropdown */
+.menu-wrapper {
+    position: relative;
+}
+
+.menu-btn {
+    background-color: #e4e4f0;
+    border: none;
+    border-radius: 30px;
+    padding: 0.6rem 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.menu-content {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    z-index: 100;
+    min-width: 160px;
+
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* When active */
+.menu-content.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+
+.menu-content a {
+    display: block;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: #333;
+    transition: background 0.2s;
+}
+
+.menu-content a:hover {
+    background-color: #f0f0f0;
+}
+
+
+.audio-btn {
+    background-color: #e4e4f0;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.audio-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.wave-animate {
+    stroke-dasharray: 6;
+    stroke-dashoffset: 0;
+    animation: waveTravel 1s linear infinite;
+}
+
+@keyframes waveTravel {
+    0% {
+        stroke-dashoffset: 0;
+    }
+    100% {
+        stroke-dashoffset: -12;
+    }
+}
+
+body{
+    color: white;
+}
+
+.sections{
+    padding-top: 20vh;
+    width: 50%;
+    margin-top: 20vh;
+    height: 40vh;
+    background-color: pink;
+    border: springgreen solid;
+}
+
+#section-container{
+    display: flex;
+    flex-direction: column;
+    gap: 20vh;
+
+}
