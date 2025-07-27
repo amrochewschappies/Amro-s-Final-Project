@@ -13,3 +13,23 @@
 .sections{
     background-color: rgba(240, 248, 255, 0);
 }
+
+#projects-section{
+    height: 180vh;
+}
+
+#scroll-container {
+    position: fixed;
+    top: 80vh;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 1.2rem;
+    animation: bounce 1s infinite;
+    pointer-events: none;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+    50% { transform: translate(-50%, -50%) translateY(-10px); }
+  }

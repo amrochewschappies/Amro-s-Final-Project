@@ -5,7 +5,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 
+gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 gsap.registerPlugin(ScrollTrigger);
 const scene = new THREE.Scene();
 
@@ -158,14 +160,14 @@ gsap.to(camera.position, {
         end: "bottom top",
         scrub: true,
     },
-    z: 58, // Move camera along the Z axis (further away for better view)
+    z: 48, // Move camera along the Z axis (further away for better view)
 });
 
 
 gsap.to(camera.position, {
     scrollTrigger: {
         trigger: "#section-4",
-        start: "top top",
+        start: "top center",
         end: "bottom top",
         scrub: true,
     },
@@ -177,11 +179,54 @@ gsap.to(camera.position, {
 gsap.to(camera.rotation, {
     scrollTrigger: {
         trigger: "#section-4",
-        start: "top top",
-        end: "bottom top",
+        start: "top center",
+        end: "bottom center",
         scrub: true,
     },
     x: -0.24234443,
     y: -0.1294443,
     z: -0.01213
+});
+
+gsap.to(camera.position, {
+  scrollTrigger: {
+    trigger: "#projects-section",
+    start: "top center",
+    end: "bottom top",
+    scrub: true
+  },
+  motionPath: {
+    path: [
+      { x: camera.position.x, y: camera.position.y, z: camera.position.z }, // current camera position
+      { x: -10, y: -5, z: -20 },  // control/midpoint — adjust for curve
+      { x: 7.8, y: -11.5, z: -55 } // final camera destination
+    ],
+    curviness: 1.5,
+    autoRotate: false
+  },
+  duration: 1
+});
+
+gsap.to(camera.rotation, {
+    scrollTrigger: {
+        trigger: "#projects-section",
+        start: "top center",
+        end: "bottom top",
+        scrub: true,
+    },
+    x: 0,
+    y: -3.72,
+    z: 0
+});
+
+gsap.to(directionalLight.position, {
+    scrollTrigger: {
+        trigger: "#projects-section",
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+    },
+    x: -20,
+    y: 80,
+    z: -30
 });

@@ -1,6 +1,6 @@
 const navPages = [
   { name: "Home", href: "/Rasha-Foundation/Home/homePage.html" },
-  { name: "Our Work", href: "/Rasha-Foundation/Our Work/work.html" },
+  { name: "Under The Hood", href: "/Rasha-Foundation/Our Work/work.html" },
   {
     name: "The Team",
     href: "/Rasha-Foundation/Meet the team/ourTeamPage.html",
