@@ -5,3 +5,11 @@
 #section-3{
     height: 180vh;
 }
+
+#section-4{
+    height: 180vh;
+}
+
+.sections{
+    background-color: rgba(240, 248, 255, 0);
+}

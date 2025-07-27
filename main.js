@@ -21,18 +21,14 @@ camera.position.x = 0.05;
 scene.add(camera);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0);
-directionalLight.position.set(10, 50, 10);
+directionalLight.position.set(10, 50, 30);
 directionalLight.castShadow = true;
-const lightc = new THREE.DirectionalLightHelper(directionalLight, 4)
 
 scene.add(directionalLight);
-scene.add(lightc)
 
 const leftCarLight = new THREE.SpotLight(0xffffff, 0);
 leftCarLight.position.set(-6.74, -0.3, 20)
 leftCarLight.castShadow = false
-const leftLightHelper = new THREE.PointLightHelper(leftCarLight, 0.5)
-scene.add(leftLightHelper)
 leftCarLight.target.position.copy(camera.position);
 scene.add(leftCarLight.target);
 scene.add(leftCarLight)
@@ -40,8 +36,6 @@ scene.add(leftCarLight)
 const rightCarLight = new THREE.SpotLight(0xffffff, 0);
 rightCarLight.position.set(5.85,-0.3,20)
 rightCarLight.castShadow = false
-const rightLightHelper = new THREE.PointLightHelper(rightCarLight, 0.5)
-scene.add(rightLightHelper)
 rightCarLight.target.position.copy(camera.position);
 scene.add(rightCarLight.target);
 scene.add(rightCarLight)
@@ -165,4 +159,29 @@ gsap.to(camera.position, {
         scrub: true,
     },
     z: 58, // Move camera along the Z axis (further away for better view)
+});
+
+
+gsap.to(camera.position, {
+    scrollTrigger: {
+        trigger: "#section-4",
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+    },
+    x: -28,
+    y: 20,
+    z: 65, // Move camera along the Z axis (further away for better view)
+});
+
+gsap.to(camera.rotation, {
+    scrollTrigger: {
+        trigger: "#section-4",
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+    },
+    x: -0.24234443,
+    y: -0.1294443,
+    z: -0.01213
 });
