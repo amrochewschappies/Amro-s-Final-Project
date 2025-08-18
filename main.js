@@ -146,8 +146,8 @@ gsap.to([leftCarLight, rightCarLight], {
 gsap.to(directionalLight, {
     scrollTrigger: {
         trigger: "#section-3",
-        start: "top top",
-        end: "bottom top",
+        start: "top center",
+        end: "bottom center",
         scrub: true,
     },
     intensity: 10,
@@ -156,50 +156,50 @@ gsap.to(directionalLight, {
 gsap.to(camera.position, {
     scrollTrigger: {
         trigger: "#section-3",
-        start: "top top",
-        end: "bottom top",
+        start: "top center",
+        end: "bottom center",
         scrub: true,
     },
     z: 48, // Move camera along the Z axis (further away for better view)
 });
 
 
-gsap.to(camera.position, {
-    scrollTrigger: {
-        trigger: "#section-4",
-        start: "top center",
-        end: "bottom top",
-        scrub: true,
-    },
-    x: -28,
-    y: 20,
-    z: 65, // Move camera along the Z axis (further away for better view)
-});
-
-gsap.to(camera.rotation, {
-    scrollTrigger: {
-        trigger: "#section-4",
-        start: "top center",
-        end: "bottom center",
-        scrub: true,
-    },
-    x: -0.24234443,
-    y: -0.1294443,
-    z: -0.01213
-});
-
-gsap.to(camera.position, {
+let section4_tl = gsap.timeline({
   scrollTrigger: {
+    trigger: "#section-4",
+    start: "top center",
+    end: "bottom center",
+    scrub: true,
+    immediateRender: false
+  }
+});
+
+section4_tl.to(camera.position, {
+  x: -28,
+  y: 20,
+  z: 65
+}).to(camera.rotation, {
+  x: -0.24234443,
+  y: -0.1294443,
+  z: -0.01213
+}, 0);
+
+let projectsTl = gsap.timeline({
+    scrollTrigger: {
     trigger: "#projects-section",
     start: "top center",
     end: "bottom top",
-    scrub: true
-  },
+    scrub: true,
+    immediateRender: false
+  }
+})
+
+projectsTl.to(camera.position, {
   motionPath: {
     path: [
       { x: camera.position.x, y: camera.position.y, z: camera.position.z }, // current camera position
       { x: -10, y: -5, z: -20 },  // control/midpoint — adjust for curve
-      { x: 7.8, y: -11.5, z: -55 } // final camera destination
+      { x: 2, y: -9.5, z: -45 } // final camera destination
     ],
     curviness: 1.5,
     autoRotate: false
@@ -207,19 +207,20 @@ gsap.to(camera.position, {
   duration: 1
 });
 
-gsap.to(camera.rotation, {
+projectsTl.to(camera.rotation, {
     scrollTrigger: {
         trigger: "#projects-section",
         start: "top center",
         end: "bottom top",
         scrub: true,
+        immediateRender: false
     },
     x: 0,
-    y: -3.72,
+    y: -3.3,
     z: 0
 });
 
-gsap.to(directionalLight.position, {
+projectsTl.to(directionalLight.position, {
     scrollTrigger: {
         trigger: "#projects-section",
         start: "top top",

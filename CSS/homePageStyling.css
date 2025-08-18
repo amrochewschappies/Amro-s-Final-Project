@@ -12,6 +12,8 @@
 
 .sections{
     background-color: rgba(240, 248, 255, 0);
+    margin: 20%;
+    position: relative;
 }
 
 #projects-section{
