@@ -1,103 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>My first three.js app</title>
-    <link rel="stylesheet" href="./styling.css" />
-    <link rel="stylesheet" href="./CSS/navigationBarStyling.css" />
-    <link rel="stylesheet" href="./CSS/homePageStyling.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.0/gsap.min.js"></script>
-    <script type="module">
-      import { loadNavbar } from "./Javascript/navigationBar.js";
-      loadNavbar("Home");
-    </script>
-  </head>
 
-  <body>
-    <header id="header">
-      <nav id="nav-bar"></nav>
-    </header>
-    <canvas class="webgl"> </canvas>
-    <script type="module" src="/main.js"></script>
+<head>
+  <meta charset="utf-8" />
+  <title>My first three.js app</title>
+  <link rel="stylesheet" href="./styling.css" />
+  <link rel="stylesheet" href="./CSS/navigationBarStyling.css" />
+  <link rel="stylesheet" href="./CSS/homePageStyling.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.0/gsap.min.js"></script>
+  <script type="module">
+    import { loadNavbar } from "./Javascript/navigationBar.js";
+    loadNavbar("Home");
+  </script>
+</head>
 
-    <section id="hero">
+<body>
+  <header id="header">
+    <nav id="nav-bar"></nav>
+  </header>
+  <canvas class="webgl"> </canvas>
+  <script type="module" src="Three.js/main.js"></script>
 
-    </section>
-
-    <div id="scroll-container">
-      <p>Scroll To Continue</p>
+  <div id="loader">
+    <div id="loader-inner">
+      <div id="loader-bar"></div>
+      <div id="loader-text">0%</div>
     </div>
+  </div>
 
-    <section id="section-container">
-      <section class="sections" id="section-1">
-        <h1>Section 1</h1>
-        <p>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
-          debitis ex nihil exercitationem consectetur expedita laudantium
-          explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
-          aut esse nulla ratione.
-        </p>
-      </section>
+  <section id="hero">
 
-      <section class="sections" id="section-2">
-        <h1>Section 2</h1>
-        <p>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
-          debitis ex nihil exercitationem consectetur expedita laudantium
-          explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
-          aut esse nulla ratione.
-        </p>
-      </section>
+  </section>
 
-      <section class="sections" id="section-3">
-        <h1>Section 3</h1>
-        <p>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
-          debitis ex nihil exercitationem consectetur expedita laudantium
-          explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
-          aut esse nulla ratione.
-        </p>
-      </section>
+  <div id="scroll-container">
+    <p>Scroll To Continue</p>
+  </div>
 
-      <section class="sections" id="section-334">
-        <h1>Section between 3</h1>
-        <p>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
-          debitis ex nihil exercitationem consectetur expedita laudantium
-          explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
-          aut esse nulla ratione.
-        </p>
-      </section>
-
-      <section class="sections" id="section-4">
-        <h1>Section 4</h1>
-        <p>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
-          debitis ex nihil exercitationem consectetur expedita laudantium
-          explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
-          aut esse nulla ratione.
-        </p>
-      </section>
-
-      <section class="sections" id="section-4asdasd">
-        <h1>Section 42</h1>
-        <p>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
-          debitis ex nihil exercitationem consectetur expedita laudantium
-          explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
-          aut esse nulla ratione.
-        </p>
-      </section>
-
-      <section class="sections" id="projects-section">
-        <h1>Section 5</h1>
-        <p>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
-          debitis ex nihil exercitationem consectetur expedita laudantium
-          explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
-          aut esse nulla ratione.
-        </p>
-      </section>
+  <section id="section-container">
+    <section class="sections" id="section-1">
+      <h1>Section 1</h1>
+      <p>
+        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
+        debitis ex nihil exercitationem consectetur expedita laudantium
+        explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
+        aut esse nulla ratione.
+      </p>
     </section>
-  </body>
+
+    <section class="sections" id="section-2">
+      <h1>Section 2</h1>
+      <p>
+        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
+        debitis ex nihil exercitationem consectetur expedita laudantium
+        explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
+        aut esse nulla ratione.
+      </p>
+    </section>
+
+    <section class="sections" id="section-3">
+      <h1>Section 3</h1>
+      <p>
+        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
+        debitis ex nihil exercitationem consectetur expedita laudantium
+        explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
+        aut esse nulla ratione.
+      </p>
+    </section>
+
+    <section class="sections" id="section-334">
+      <h1>Section between 3</h1>
+      <p>
+        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
+        debitis ex nihil exercitationem consectetur expedita laudantium
+        explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
+        aut esse nulla ratione.
+      </p>
+    </section>
+
+    <section class="sections" id="section-4">
+      <h1>Section 4</h1>
+      <p>
+        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
+        debitis ex nihil exercitationem consectetur expedita laudantium
+        explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
+        aut esse nulla ratione.
+      </p>
+    </section>
+
+    <section class="sections" id="section-4asdasd">
+      <h1>Section 42</h1>
+      <p>
+        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
+        debitis ex nihil exercitationem consectetur expedita laudantium
+        explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
+        aut esse nulla ratione.
+      </p>
+    </section>
+
+    <section class="sections" id="projects-section">
+      <h1>Section 5</h1>
+      <p>
+        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fugit
+        debitis ex nihil exercitationem consectetur expedita laudantium
+        explicabo. Illo, voluptates quo. Velit, perspiciatis id ex quas vel
+        aut esse nulla ratione.
+      </p>
+    </section>
+  </section>
+</body>
+
 </html>
