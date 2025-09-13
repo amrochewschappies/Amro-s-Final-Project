@@ -164,6 +164,8 @@ const rainMaterial = new THREE.PointsMaterial({
 const rain = new THREE.Points(rainGeom, rainMaterial);
 rainGroup.add(rain);
 
+scene.fog = new THREE.FogExp2(0x808080, 0.0020)
+
 // per-frame updater
 function updateRain(dt) {
   const pos = rainGeom.attributes.position.array;
@@ -289,7 +291,7 @@ gsap.to(directionalLight, {
 
 // gsap.to(directionalLight, {
 //     scrollTrigger: {
-//         trigger: "#section-3",
+//         trigger: "#section-3",               
 //         start: "top center",
 //         end: "bottom center",
 //         scrub: true,
