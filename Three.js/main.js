@@ -279,15 +279,15 @@ gsap.to([leftCarLight, rightCarLight], {
     intensity: 150,
 });
 
-gsap.to(directionalLight, {
-    scrollTrigger: {
-        trigger: "#section-1",
-        start: "top bottom",
-        end: "bottom center",
-        scrub: true,
-    },
-    intensity: 2,
-});
+// gsap.to(directionalLight, {
+//     scrollTrigger: {
+//         trigger: "#section-1",
+//         start: "top bottom",
+//         end: "bottom center",
+//         scrub: true,
+//     },
+//     intensity: 0,
+// });
 
 // gsap.to(directionalLight, {
 //     scrollTrigger: {
@@ -311,12 +311,12 @@ gsap.to(camera.position, {
 
 gsap.to(directionalLight, {
     scrollTrigger: {
-        trigger: "#section-3",
+        trigger: "#section-4",
         start: "top center",
         end: "bottom center",
         scrub: true,
     },
-    intensity: 0.8,
+    intensity: 0.4,
 });
 
 let section4_tl = gsap.timeline({

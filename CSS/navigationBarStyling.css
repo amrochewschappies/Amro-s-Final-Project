@@ -121,17 +121,14 @@ header{
 }
 
 .wave-animate {
-    stroke-dasharray: 6;
+    stroke-dasharray: 20 4; 
     stroke-dashoffset: 0;
-    animation: waveTravel 1s linear infinite;
+    animation: waveGlide 3s linear infinite;
 }
 
-@keyframes waveTravel {
-    0% {
-        stroke-dashoffset: 0;
-    }
-    100% {
-        stroke-dashoffset: -12;
+@keyframes waveGlide {
+    to {
+        stroke-dashoffset: -40;
     }
 }
 
