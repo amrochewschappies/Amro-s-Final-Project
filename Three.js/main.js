@@ -41,7 +41,7 @@ const scene = new THREE.Scene();
 
 const sizes = {
     width: window.innerWidth,
-    height: window.innerHeight,
+    height: window.innerHeight, 
 }
 
 const camera = new THREE.PerspectiveCamera(45,  sizes.width / sizes.height , 0.1, 10000);
@@ -114,7 +114,7 @@ gltfLoader.load("../Assets/Wheels.glb", (gltf) => {
 
     // 2) ScrollTrigger that controls play/pause for ALL actions
     ScrollTrigger.create({
-      trigger: "#section-4asdasd",
+      trigger: "#section-6",
       start: "top center",
       end: "bottom center",
       onEnter: () => { actions.forEach(a => a.paused = false); },
@@ -319,11 +319,13 @@ gsap.to(directionalLight, {
     intensity: 0.4,
 });
 
+
+
 let section4_tl = gsap.timeline({
   scrollTrigger: {
     trigger: "#section-4",
-    start: "top center",
-    end: "bottom center",
+    start: "top bottom",
+    end: "bottom top",
     scrub: true,
     immediateRender: false
   }
@@ -344,8 +346,8 @@ section4_tl.to(camera.position, {
 let projects_tl = gsap.timeline({
   scrollTrigger: {
     trigger: "#projects-section",
-    start: "top center",
-    end: "bottom top",
+    start: "top bottom",
+    end: "center top",
     scrub: true,
     immediateRender: false,
     invalidateOnRefresh: true
@@ -353,8 +355,8 @@ let projects_tl = gsap.timeline({
 });
 
 projects_tl.to(camera.position, {
-  x: -1.2,
-  y: -5.5,
+  x: -0.2,
+  y: -5.5,  
   z: -35,
   ease: "none"
 })

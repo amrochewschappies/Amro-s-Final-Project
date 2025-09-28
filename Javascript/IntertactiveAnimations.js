@@ -1,85 +1,179 @@
-const observer = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('in');
-        // If you want it to animate only once:
-        observer.unobserve(entry.target);
-      }
-    });
-  },
-  { threshold: 0.5 } // fire when 20% is visible
-);
+const sections = document.querySelectorAll(".lock-section");
+let stops = Array.from(sections).map(el => el.offsetTop);
 
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+const TOLERANCE = 50; // px tolerance to decide "before/after" a stop
+let currentIndex = -1; // -1 = not initialized for snapping
+let isAnimating = false;
 
+const snapStart = 800; // px from top where snapping starts
+let snappingEnabled = false;
 
-const lockSection = document.querySelector("#lock-section");
-let locked = false;
-let alreadySnapped = false; // <-- new flag
+function updateStops() {
+  stops = Array.from(sections).map((el, i) => {
+    let base = el.offsetTop;
+    let adjustment = 0;
 
-window.addEventListener("scroll", () => {
-  const rect = lockSection.getBoundingClientRect();
+    // Example: for section index 3 (the 4th section),
+    // stop when the middle reaches the top of the screen
+    if (i === 1) {
+      adjustment = -350;
+    }
 
-  if (rect.top <= 0 && !locked && !alreadySnapped) {
-    locked = true;
-    alreadySnapped = true; // mark that we snapped once
+    if (i === 3) {
+      adjustment = 760;
+    }
 
-    // Auto-scroll into place
-    lockSection.scrollIntoView({ behavior: "smooth" });
+    // You can hardcode values or build a lookup table for custom offsets
+    // e.g. {3: 200, 5: -100} to nudge section 4 down 200px, section 6 up 100px
 
-    const release = freezeScrollAt(window.scrollY);
+    return base + adjustment;
+  });
+}
+window.addEventListener("resize", updateStops);
+window.addEventListener("load", updateStops);
 
-    // Lock scrolling
-    disableScroll()
+let snapCooldown = false;
 
-    // Unlock after delay (or user action)
-    setTimeout(() => {
-      release();
-      enableScroll()
-      locked = false;
-    }, 2000); // adjust to your needs
+function goToSection(index) {
+  if (index < 0 || index >= stops.length) {
+    snappingEnabled = false;
+    currentIndex = -1;
+    return;
   }
 
-  if (rect.top > window.innerHeight / 2) {
-    alreadySnapped = false;
-    resetObserver();
+  isAnimating = true;
+  snapCooldown = true;
+  currentIndex = index;
+
+  window.scrollTo({ top: stops[currentIndex], behavior: "smooth" });
+
+  // lock further gestures until animation ends
+  setTimeout(() => {
+    isAnimating = false;
+  }, 700); // match smooth scroll duration
+
+  // cooldown to block momentum overshoot
+  setTimeout(() => {
+    snapCooldown = false;
+  }, 900); // adjust to taste
+}
+
+function findNearestSection() {
+  const y = window.scrollY;
+  let nearest = 0;
+  let minDist = Infinity;
+  stops.forEach((stop, i) => {
+    const d = Math.abs(stop - y);
+    if (d < minDist) { minDist = d; nearest = i; }
+  });
+  return nearest;
+}
+
+// Toggle snapping on/off depending on scroll position
+window.addEventListener("scroll", () => {
+  if (window.scrollY >= snapStart) {
+    if (!snappingEnabled) {
+      snappingEnabled = true;
+      currentIndex = -1; // don't pre-set index; wait for first gesture
+    }
+  } else {
+    if (snappingEnabled) {
+      snappingEnabled = false;
+      currentIndex = -1; // reset so next time it re-inits
+    }
+  }
+}, { passive: true });
+
+// Wheel control (one-step-per-gesture)
+window.addEventListener("wheel", (e) => {
+  if (!snappingEnabled) return;        // manual scrolling before threshold
+  if (isAnimating) { e.preventDefault(); return; }
+
+  const dir = e.deltaY > 0 ? 1 : -1;
+
+  // initialize on first gesture after snapping enabled
+  if (currentIndex === -1) currentIndex = findNearestSection();
+
+  let target;
+  if (dir > 0) {
+    // scroll down:
+    // if we're still before the current stop, snap to it first,
+    // otherwise advance to the next stop.
+    if (window.scrollY < stops[currentIndex] - TOLERANCE) {
+      target = currentIndex;
+    } else {
+      target = Math.min(currentIndex + 1, stops.length - 1);
+    }
+  } else {
+    // scroll up:
+    // if we're below the current stop (by a bit), snap to it first,
+    // otherwise go to the previous stop (or -1 to leave snapping).
+    if (window.scrollY > stops[currentIndex] + TOLERANCE) {
+      target = currentIndex;
+    } else {
+      target = currentIndex - 1; // may be -1 → will disable snapping
+    }
+  }
+
+  goToSection(target);
+  e.preventDefault();
+}, { passive: false });
+
+// Keyboard control mirrors same logic
+window.addEventListener("keydown", (e) => {
+  if (!snappingEnabled || isAnimating) return;
+
+  if (e.key === "ArrowDown" || e.key === "PageDown") {
+    if (currentIndex === -1) currentIndex = findNearestSection();
+    // reuse same decision logic as wheel (down)
+    const target = (window.scrollY < stops[currentIndex] - TOLERANCE)
+      ? currentIndex
+      : Math.min(currentIndex + 1, stops.length - 1);
+    goToSection(target);
+  } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+    if (currentIndex === -1) currentIndex = findNearestSection();
+    const target = (window.scrollY > stops[currentIndex] + TOLERANCE)
+      ? currentIndex
+      : currentIndex - 1;
+    goToSection(target);
   }
 });
 
-function disableScroll() {
-  document.body.addEventListener("wheel", preventScroll, { passive: false });
-  document.body.addEventListener("touchmove", preventScroll, { passive: false });
-  document.body.addEventListener("keydown", preventKeys, { passive: false });
+
+const projects = [
+  { plate: "Proj#1-GP", content: "First project description" },
+  { plate: "Proj#2-GP", content: "Second project description" },
+  { plate: "Proj#3-GP", content: "Third project description" }
+];
+
+let currentProjectIndex = 0;
+
+const numberPlate = document.getElementById("number-plate");
+const gallery = document.getElementById("project-gallery");
+const leftBtn = document.querySelector(".left-indicator");
+const rightBtn = document.querySelector(".right-indicator");
+
+function updateProject(index) {
+  numberPlate.textContent = projects[index].plate;
+  document.getElementById("project-content").innerHTML = `<p>${projects[index].content}</p>`;
 }
 
-function enableScroll() {
-  document.body.removeEventListener("wheel", preventScroll, { passive: false });
-  document.body.removeEventListener("touchmove", preventScroll, { passive: false });
-  document.body.removeEventListener("keydown", preventKeys, { passive: false });
+function flicker(button) {
+  button.classList.add("flicker");
+  setTimeout(() => button.classList.remove("flicker"), 800);
 }
 
-function preventScroll(e) {
-  e.preventDefault();
-}
+leftBtn.addEventListener("click", () => {
+  flicker(leftBtn);
+  currentProjectIndex = (currentProjectIndex - 1 + projects.length) % projects.length;
+  updateProject(currentProjectIndex);
+});
 
-function preventKeys(e) {
-  // Arrow keys, space, PgUp/PgDn
-  if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
-    e.preventDefault();
-  }
-}
+rightBtn.addEventListener("click", () => {
+  flicker(rightBtn);
+  currentProjectIndex = (currentProjectIndex + 1) % projects.length;
+  updateProject(currentProjectIndex);
+});
 
-function freezeScrollAt(y) {
-  window.scrollTo(0, y);
-  const lockHandler = () => window.scrollTo(0, y);
-  window.addEventListener("scroll", lockHandler);
-  return () => window.removeEventListener("scroll", lockHandler);
-}
-
-function resetObserver() {
-  document.querySelectorAll('.reveal').forEach(el => {
-    el.classList.remove('in'); // remove the animation class
-    observer.observe(el);      // reattach the observer
-  });
-}
+// Initial load
+updateProject(currentProjectIndex);

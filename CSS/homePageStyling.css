@@ -6,6 +6,11 @@
   font-style: normal;
 }
 
+body {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+}
+
 h1 {
   font-family: 'Orbitron', sans-serif;
   font-size: 4vw;
@@ -17,16 +22,14 @@ h1 {
 
 
 .sections {
-  background-color: rgba(255, 255, 255, 0);
-  border: none;
+  background-color: rgba(175, 113, 113, 0);
+  border: navajowhite;
   position: relative;
   width: 80%;
   height: 180vh;
   margin: auto;
-}
-
-#projects-section {
-  height: 180vh;
+  text-align: left;
+  scroll-snap-align: start;
 }
 
 #scroll-container {
@@ -38,6 +41,8 @@ h1 {
   font-size: 1.2rem;
   animation: bounce 1s infinite;
   pointer-events: none;
+
+  display: none;
 }
 
 #loader {
@@ -87,15 +92,41 @@ h1 {
   }
 }
 
+.reveals {
+  width: 59%;
+  font-size: 500%;
+  transform: rotateX(72deg); /* steep tilt so it looks flat */
+  transform-origin: top center; /* pivot from the top */
+  position: relative;
+  left: 15vw;
+  top: 18vh;
+  text-align: center;
+  color: #eaeaea31;
+}
+
+.reveals-wrapper {
+  perspective: 800px; /* create the 3D space */
+}
+
 .reveal {
   opacity: 0;
   transform: translateX(-60px);
+  width: 20%;
+}
+
+.body-text{
+  width: 23%;
 }
 
 /* play state applied by JS when in view */
 .reveal.in {
-  animation: loadFromLeft 0.8s ease-out both;
+  animation: loadFromTop 0.4s ease-out both;
   /* `both` keeps end state */
+}
+
+#section-1-container{
+  position: relative;
+  top: 15%;
 }
 
 
@@ -133,4 +164,121 @@ h1 {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+@keyframes loadFromBottom {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.reveal{
+  font-size: 2rem;
+  color: white;
+}
+
+
+#projects-section{
+  margin-top: 90vh;
+  height: auto;
+}
+
+#section-4{
+  padding-top: 150vh;
+}
+
+#section-4-text{
+  position: relative;
+  top: -180vh;
+  left: 0;
+  transform: 
+    translateZ(230px)   /* bring closer to camera */
+    rotateY(-55deg)     /* rotate leftwards */
+    rotateZ(40.5deg)
+    rotateX(-19deg)
+    translateX(-67px);  /* fine-tune sideways */
+  transform-origin: center;
+  color: rgba(255, 255, 255, 0.167);
+}
+
+#section-4-container {
+  position: relative;
+  perspective: 1200px; /* smaller = stronger 3D effect */
+  transform-style: preserve-3d;
+  width: 100%;
+  height: 100vh; /* adjust to fit scene */
+  display: flex;
+  justify-content: flex-end; /* push to right side */
+  align-items: center;
+}
+
+#section-6-heading{
+  font-size: 4rem;
+  position: relative;
+  top: 14%;
+  color: rgba(255, 255, 255, 0.134); /* acts as a base color */
+  mix-blend-mode: difference;  
+}
+
+#number-plate{
+  position: relative;
+  top: -12.5vh;
+  left: 40.25%;
+  background-color: #111010f1;
+  width: 15vw;
+  height: 18%;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
+#carousel-section{
+  background-color: #d9d9d91d;
+  height: 75vh;
+  margin-top: 105vh;
+}
+
+#project-gallery{
+  height: 70vh;
+  text-align: center;
+  padding-top: 5%;
+}
+
+.carousel-controls {
+  display: flex;
+  justify-content: space-between;
+  width: 90%;
+  position: relative;
+  bottom: 27vh;
+  left: 3vw;
+}
+
+.indicator {
+  background: #222;           /* off state */
+  color: #ff9900;             /* text always stays orange */
+  border: 2px solid #ff9900;
+  border-radius: 50%;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+/* Only two states: off and on */
+@keyframes flickerAnim {
+  0%   { background: #222; }
+  49%  { background: #222; }
+  50%  { background: #ff9900; }
+  100% { background: #ff9900; }
+}
+
+.indicator:hover {
+  animation: flickerAnim 1.0s steps(1, end) infinite;
 }
