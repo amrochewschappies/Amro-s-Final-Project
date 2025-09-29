@@ -37,12 +37,10 @@ h1 {
   top: 80vh;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
+  color: rgba(168, 164, 164, 0.54);
   font-size: 1.2rem;
   animation: bounce 1s infinite;
   pointer-events: none;
-
-  display: none;
 }
 
 #loader {
@@ -198,31 +196,31 @@ h1 {
   top: -180vh;
   left: 0;
   transform: 
-    translateZ(230px)   /* bring closer to camera */
-    rotateY(-55deg)     /* rotate leftwards */
+    translateZ(230px)   
+    rotateY(-55deg)     
     rotateZ(40.5deg)
     rotateX(-19deg)
-    translateX(-67px);  /* fine-tune sideways */
+    translateX(-67px); 
   transform-origin: center;
   color: rgba(255, 255, 255, 0.167);
 }
 
 #section-4-container {
   position: relative;
-  perspective: 1200px; /* smaller = stronger 3D effect */
+  perspective: 1200px; 
   transform-style: preserve-3d;
   width: 100%;
-  height: 100vh; /* adjust to fit scene */
+  height: 100vh; 
   display: flex;
-  justify-content: flex-end; /* push to right side */
+  justify-content: flex-end; 
   align-items: center;
 }
 
 #section-6-heading{
-  font-size: 4rem;
+  font-size: 6rem;
+  text-align: center;
   position: relative;
-  top: 14%;
-  color: rgba(255, 255, 255, 0.134); /* acts as a base color */
+  color: rgba(255, 255, 255, 0.216); 
   mix-blend-mode: difference;  
 }
 
@@ -262,23 +260,22 @@ h1 {
 }
 
 .indicator {
-  background: #222;           /* off state */
-  color: #ff9900;             /* text always stays orange */
-  border: 2px solid #ff9900;
-  border-radius: 50%;
+  background: #222;           
+  color: #656565;             
+  border: 2px solid #656565;
+  border-radius: 20%;
   padding: 0.5rem 1rem;
   cursor: pointer;
   font-size: 1.5rem;
 }
 
-/* Only two states: off and on */
 @keyframes flickerAnim {
   0%   { background: #222; }
   49%  { background: #222; }
   50%  { background: #ff9900; }
-  100% { background: #ff9900; }
+  100% { background: #ffd000; }
 }
 
 .indicator:hover {
-  animation: flickerAnim 1.0s steps(1, end) infinite;
+  animation: flickerAnim 0.8s steps(1, end) infinite;
 }

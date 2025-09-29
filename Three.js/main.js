@@ -12,12 +12,10 @@ import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 gsap.registerPlugin(ScrollTrigger);
 
-/* ------- Loader DOM refs ------- */
 const loaderEl = document.getElementById("loader");
 const barEl = document.getElementById("loader-bar");
 const textEl = document.getElementById("loader-text");
 
-/* ------- LoadingManager ------- */
 const manager = new THREE.LoadingManager();
 
 manager.onStart = () => {
@@ -32,7 +30,6 @@ manager.onProgress = (url, loaded, total) => {
 };
 
 manager.onLoad = () => {
-  // Fade out overlay, fade in canvas
   gsap.to("#loader", { autoAlpha: 0, duration: 0.5, onComplete: () => loaderEl?.remove() });
   gsap.to(".webgl", { autoAlpha: 1, duration: 0.5 });
 };
@@ -77,21 +74,18 @@ renderer.setSize(sizes.width, sizes.height);
 renderer.setClearColor(0x000000);
 renderer.domElement.style.opacity = 0;
 
-// Set up the post-processing pipeline
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 
-// Set up the bloom pass specifically for the left car light
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  1.5, // Strength of bloom
-  0.4, // Bloom radius
-  0.85 // Bloom threshold
+  1.5, 
+  0.4,
+  0.85 
 );
 composer.addPass(bloomPass);
 
 const gltfLoader = new GLTFLoader(manager);
-// 1) Keep a list of actions
 let mixer;
 let actions = [];
 
@@ -107,12 +101,11 @@ gltfLoader.load("../Assets/Wheels.glb", (gltf) => {
       a.setLoop(THREE.LoopRepeat, Infinity);
       a.clampWhenFinished = false;
       a.enabled = true;
-      a.play();          // start them once...
-      a.paused = true;   // ...but keep them paused until section 2 is visible
+      a.play();     
+      a.paused = true;   
       return a;
     });
 
-    // 2) ScrollTrigger that controls play/pause for ALL actions
     ScrollTrigger.create({
       trigger: "#section-6",
       start: "top center",
@@ -121,20 +114,16 @@ gltfLoader.load("../Assets/Wheels.glb", (gltf) => {
       onLeave: () => { actions.forEach(a => a.paused = true); },
       onEnterBack: () => { actions.forEach(a => a.paused = false); },
       onLeaveBack: () => { actions.forEach(a => a.paused = true); },
-      // If you want them to RESTART each time you re-enter, add:
-      // onEnter: () => { actions.forEach(a => { a.reset(); a.paused = false; }); },
-      // onEnterBack: () => { actions.forEach(a => { a.reset(); a.paused = false; }); },
     });
   }
 }, undefined, (err) => console.error("GLB load error:", err));
 
-/* -------- Rain (Points) -------- */
-const RAIN_COUNT = 15000;                       // adjust for perf
-const RAIN_AREA = { w: 160, h: 120, d: 160 };   // box around camera
-const FALL_MIN = 20, FALL_MAX = 34;             // m/s range
-const WIND = { x: 1.2, z: -0.6 };               // sideways drift
+const RAIN_COUNT = 15000;                      
+const RAIN_AREA = { w: 160, h: 120, d: 160 };   
+const FALL_MIN = 20, FALL_MAX = 34;             
+const WIND = { x: 1.2, z: -0.6 };              
 
-// Make rain follow the camera so you're always inside it
+
 const rainGroup = new THREE.Group();
 camera.add(rainGroup);
 
@@ -142,11 +131,10 @@ const rainGeom = new THREE.BufferGeometry();
 const positions = new Float32Array(RAIN_COUNT * 3);
 const speeds    = new Float32Array(RAIN_COUNT);
 
-// Spawn drops in a box centered on camera
 for (let i = 0; i < RAIN_COUNT; i++) {
   const ix = i * 3;
   positions[ix + 0] = (Math.random() - 0.5) * RAIN_AREA.w;
-  positions[ix + 1] = Math.random() * RAIN_AREA.h * 0.5; // start mostly above
+  positions[ix + 1] = Math.random() * RAIN_AREA.h * 0.5;
   positions[ix + 2] = (Math.random() - 0.5) * RAIN_AREA.d;
   speeds[i] = THREE.MathUtils.lerp(FALL_MIN, FALL_MAX, Math.random());
 }
@@ -166,7 +154,6 @@ rainGroup.add(rain);
 
 scene.fog = new THREE.FogExp2(0x808080, 0.0020)
 
-// per-frame updater
 function updateRain(dt) {
   const pos = rainGeom.attributes.position.array;
   let changed = false;
@@ -174,13 +161,11 @@ function updateRain(dt) {
   for (let i = 0; i < RAIN_COUNT; i++) {
     const ix = i * 3;
 
-    // fall
     pos[ix + 1] -= speeds[i] * dt;
-    // wind
+
     pos[ix + 0] += WIND.x * dt;
     pos[ix + 2] += WIND.z * dt;
 
-    // recycle when below the box
     if (pos[ix + 1] < -RAIN_AREA.h * 0.5) {
       pos[ix + 1] = RAIN_AREA.h * 0.5;
       pos[ix + 0] = (Math.random() - 0.5) * RAIN_AREA.w;
@@ -188,7 +173,6 @@ function updateRain(dt) {
       speeds[i] = THREE.MathUtils.lerp(FALL_MIN, FALL_MAX, Math.random());
     }
 
-    // wrap X/Z so particles don’t drift away forever
     if (pos[ix + 0] < -RAIN_AREA.w * 0.5) pos[ix + 0] += RAIN_AREA.w;
     if (pos[ix + 0] >  RAIN_AREA.w * 0.5) pos[ix + 0] -= RAIN_AREA.w;
     if (pos[ix + 2] < -RAIN_AREA.d * 0.5) pos[ix + 2] += RAIN_AREA.d;
@@ -202,19 +186,19 @@ function updateRain(dt) {
 
 
 
-let scrollProgress = 0; // Variable to store scroll progress
+let scrollProgress = 0; 
 let maxScroll = document.body.scrollHeight - window.innerHeight;
 
-// Update the scroll progress on scroll
+
 window.addEventListener("scroll", () => {
-    scrollProgress = window.scrollY / maxScroll; // Get scroll percentage
+    scrollProgress = window.scrollY / maxScroll;
 });
 
 const rgbeLoader = new RGBELoader(manager);
 rgbeLoader.load('../Assets/DarkStorm4K.hdr', (tex) => {
   tex.mapping = THREE.EquirectangularReflectionMapping;
-  // scene.environment = tex;   // for PBR reflections
-  scene.background = tex;    // if you want to see it
+  // scene.environment = tex;
+  scene.background = tex;    
   scene.environment = null;
 });
 
@@ -229,7 +213,7 @@ textureLoader.load("../Assets/Car Light.png", (texture) => {
   });
 
   const glowSprite = new THREE.Sprite(spriteMaterial);
-  glowSprite.scale.set(2, 2, 1); // Adjust size
+  glowSprite.scale.set(2, 2, 1); 
   glowSprite.position.copy(leftCarLight.position);
 
   scene.add(glowSprite);
@@ -245,7 +229,7 @@ textureLoader.load("../Assets/Car Light.png", (texture) => {
   });
 
   const rightGlowSprite = new THREE.Sprite(spriteMaterial);
-  rightGlowSprite.scale.set(2, 2, 1); // Adjust size
+  rightGlowSprite.scale.set(2, 2, 1); 
   rightGlowSprite.position.copy(rightCarLight.position);
 
   scene.add(rightGlowSprite);
@@ -258,7 +242,7 @@ function animate() {
     const delta = clock.getDelta();
     updateRain(delta);
     if (mixer) mixer.update(delta);
-    composer.render(); // Use composer.render() instead of renderer.render()
+    composer.render(); 
 }
 
 animate();
@@ -306,7 +290,7 @@ gsap.to(camera.position, {
         end: "bottom center",
         scrub: true,
     },
-    z: 48, // Move camera along the Z axis (further away for better view)
+    z: 48, 
 });
 
 gsap.to(directionalLight, {
