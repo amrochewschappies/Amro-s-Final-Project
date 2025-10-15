@@ -235,7 +235,8 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
+  font-size: auto;
+  color: rgba(255, 255, 255, 0.601); 
 }
 
 #carousel-section{
@@ -246,8 +247,20 @@ h1 {
 
 #project-gallery{
   height: 70vh;
+  width: 98%;
   text-align: center;
-  padding-top: 5%;
+  display: flex;
+  gap: 2%;
+  padding: 0 12px 0 12px;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+#project-image{
+  width: 20%;
+  height: auto;        /* let the browser compute height from width */
+  display: block;      /* avoid inline-image baseline gap */
+  object-fit: contain; 
 }
 
 .carousel-controls {
@@ -269,11 +282,16 @@ h1 {
   font-size: 1.5rem;
 }
 
+#project-content{
+  width: 40vw;
+  color: rgba(255, 255, 255, 0.656); 
+}
+
 @keyframes flickerAnim {
   0%   { background: #222; }
   49%  { background: #222; }
-  50%  { background: #ff9900; }
-  100% { background: #ffd000; }
+  50%  { background: #414141; }
+  100% { background: #414141; }
 }
 
 .indicator:hover {

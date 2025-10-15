@@ -4,27 +4,16 @@ let stops = Array.from(sections).map(el => el.offsetTop);
 const TOLERANCE = 50; // px tolerance to decide "before/after" a stop
 let currentIndex = -1; // -1 = not initialized for snapping
 let isAnimating = false;
-
-const snapStart = 800; // px from top where snapping starts
-let snappingEnabled = false;
+let snappingEnabled = true; // ✅ always on — no toggle
+const snapStart = 0; // no longer used, but kept for reference
 
 function updateStops() {
   stops = Array.from(sections).map((el, i) => {
     let base = el.offsetTop;
     let adjustment = 0;
 
-    // Example: for section index 3 (the 4th section),
-    // stop when the middle reaches the top of the screen
-    if (i === 1) {
-      adjustment = -350;
-    }
-
-    if (i === 3) {
-      adjustment = 760;
-    }
-
-    // You can hardcode values or build a lookup table for custom offsets
-    // e.g. {3: 200, 5: -100} to nudge section 4 down 200px, section 6 up 100px
+    if (i === 3) adjustment = -350;
+    if (i === 5) adjustment = 760;
 
     return base + adjustment;
   });
@@ -34,9 +23,8 @@ window.addEventListener("load", updateStops);
 
 let snapCooldown = false;
 
-function goToSection(index) {
+function goToSection(index, duration = 1000) { // duration = scroll speed in ms
   if (index < 0 || index >= stops.length) {
-    snappingEnabled = false;
     currentIndex = -1;
     return;
   }
@@ -45,17 +33,34 @@ function goToSection(index) {
   snapCooldown = true;
   currentIndex = index;
 
-  window.scrollTo({ top: stops[currentIndex], behavior: "smooth" });
+  const startY = window.scrollY;
+  const targetY = stops[currentIndex];
+  const distance = targetY - startY;
+  const startTime = performance.now();
 
-  // lock further gestures until animation ends
-  setTimeout(() => {
-    isAnimating = false;
-  }, 700); // match smooth scroll duration
+  function easeInOutCubic(t) {
+    return t < 0.5
+      ? 4 * t * t * t
+      : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
 
-  // cooldown to block momentum overshoot
-  setTimeout(() => {
-    snapCooldown = false;
-  }, 900); // adjust to taste
+  function step(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = easeInOutCubic(progress);
+    window.scrollTo(0, startY + distance * eased);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      isAnimating = false;
+    }
+  }
+
+  requestAnimationFrame(step);
+
+  // Optional cooldown
+  setTimeout(() => { snapCooldown = false; }, duration + 500);
 }
 
 function findNearestSection() {
@@ -69,63 +74,48 @@ function findNearestSection() {
   return nearest;
 }
 
-// Toggle snapping on/off depending on scroll position
-window.addEventListener("scroll", () => {
-  if (window.scrollY >= snapStart) {
-    if (!snappingEnabled) {
-      snappingEnabled = true;
-      currentIndex = -1; // don't pre-set index; wait for first gesture
-    }
-  } else {
-    if (snappingEnabled) {
-      snappingEnabled = false;
-      currentIndex = -1; // reset so next time it re-inits
-    }
-  }
-}, { passive: true });
+// ❌ Removed the "Toggle snapping on/off depending on scroll position" block
 
-// Wheel control (one-step-per-gesture)
+// ✅ Wheel control — always active
 window.addEventListener("wheel", (e) => {
-  if (!snappingEnabled) return;        // manual scrolling before threshold
+  if (!snappingEnabled) return;
   if (isAnimating) { e.preventDefault(); return; }
 
   const dir = e.deltaY > 0 ? 1 : -1;
 
-  // initialize on first gesture after snapping enabled
   if (currentIndex === -1) currentIndex = findNearestSection();
 
   let target;
   if (dir > 0) {
-    // scroll down:
-    // if we're still before the current stop, snap to it first,
-    // otherwise advance to the next stop.
     if (window.scrollY < stops[currentIndex] - TOLERANCE) {
       target = currentIndex;
     } else {
       target = Math.min(currentIndex + 1, stops.length - 1);
     }
   } else {
-    // scroll up:
-    // if we're below the current stop (by a bit), snap to it first,
-    // otherwise go to the previous stop (or -1 to leave snapping).
     if (window.scrollY > stops[currentIndex] + TOLERANCE) {
       target = currentIndex;
     } else {
-      target = currentIndex - 1; // may be -1 → will disable snapping
+      target = currentIndex - 1;
     }
   }
 
-  goToSection(target);
+  if (currentIndex == 0) {
+    goToSection(target, 1500)
+  }
+  else {
+    goToSection(target);
+  }
+
   e.preventDefault();
 }, { passive: false });
 
-// Keyboard control mirrors same logic
+// ✅ Keyboard control — always active
 window.addEventListener("keydown", (e) => {
   if (!snappingEnabled || isAnimating) return;
 
   if (e.key === "ArrowDown" || e.key === "PageDown") {
     if (currentIndex === -1) currentIndex = findNearestSection();
-    // reuse same decision logic as wheel (down)
     const target = (window.scrollY < stops[currentIndex] - TOLERANCE)
       ? currentIndex
       : Math.min(currentIndex + 1, stops.length - 1);
@@ -140,10 +130,14 @@ window.addEventListener("keydown", (e) => {
 });
 
 
+// -------------------
+// PROJECT CAROUSEL
+// -------------------
 const projects = [
-  { plate: "Proj#1-GP", content: "First project description" },
-  { plate: "Proj#2-GP", content: "Second project description" },
-  { plate: "Proj#3-GP", content: "Third project description" }
+  {
+    plate: "FERRARI-GP", content: "This Ferrari-themed website is a digital showroom created as part of a course project to explore the integration of APIs and the effective visualization of data. The project showcases Ferrari's iconic models, combining sleek design with interactivity to deliver an engaging user experience. Visitors can explore a detailed gallery of Ferrari vehicles, enhanced with animations and data visualizations, such as price trends and performance metrics, to provide a comprehensive view of the brand's legacy and innovation.", image: "./Assets/Ferrari Background.png" },
+  { plate: "GROVEEEE-GP", content: "Groveeee is a beach event listing web app developed during my first experience with React. It showcases beach-related events and includes features such as a favorites system, client-side routing, global state management with useContext, and side effect handling with useEffect, among other core React functionalities.", image: "./Assets/Groveeee Image.png" },
+  { plate: "MLUNGISI-GP", content: "The Mlungisi corporation is dedicated to creating inclusive, gamified educational experiences tailored to neurodivergent learners. By leveraging individual strengths, we aim to make learning accessible, engaging, and empowering for all.", image: "./Assets/Mlungisi Logo.png" }
 ];
 
 let currentProjectIndex = 0;
@@ -156,6 +150,7 @@ const rightBtn = document.querySelector(".right-indicator");
 function updateProject(index) {
   numberPlate.textContent = projects[index].plate;
   document.getElementById("project-content").innerHTML = `<p>${projects[index].content}</p>`;
+  document.getElementById("project-image").src = projects[index].image;
 }
 
 function flicker(button) {
@@ -175,5 +170,4 @@ rightBtn.addEventListener("click", () => {
   updateProject(currentProjectIndex);
 });
 
-// Initial load
 updateProject(currentProjectIndex);
