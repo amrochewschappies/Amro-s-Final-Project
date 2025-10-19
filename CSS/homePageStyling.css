@@ -34,7 +34,7 @@ h1 {
 
 #scroll-container {
   position: fixed;
-  top: 80vh;
+  top: 8vh;
   left: 50%;
   transform: translate(-50%, -50%);
   color: rgba(168, 164, 164, 0.54);

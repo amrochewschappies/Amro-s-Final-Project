@@ -1,10 +1,13 @@
+// navbar.js
+// UPDATED: audio button now play/pause (no restart) and binds scroll on first click.
+
+import { audioDir, bindScrollToClips } from "./audioController.js"; // adjust path
+
+
 const navPages = [
   { name: "Home", href: "/Rasha-Foundation/Home/homePage.html" },
   { name: "Under The Hood", href: "/Rasha-Foundation/Our Work/work.html" },
-  {
-    name: "Projects",
-    href: "/Rasha-Foundation/Meet the team/ourTeamPage.html",
-  },
+  { name: "Projects", href: "/Rasha-Foundation/Meet the team/ourTeamPage.html" },
   { name: "Contact", href: "/Rasha-Foundation/Contact/contact.html" },
 ];
 
@@ -26,14 +29,11 @@ export function loadNavbar(CurrentPageName) {
   const rightSection = document.createElement("div");
   rightSection.classList.add("navbar-right");
 
-  // Circle button (icon)
+  // --- Audio Button (icon) ---
   const audioBtn = document.createElement("button");
   audioBtn.classList.add("audio-btn");
 
-  const audioSVG = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "svg"
-  );
+  const audioSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   audioSVG.setAttribute("viewBox", "0 0 24 24");
   audioSVG.classList.add("audio-icon");
 
@@ -44,26 +44,28 @@ export function loadNavbar(CurrentPageName) {
   path.setAttribute("stroke-linecap", "round");
   path.setAttribute("stroke-linejoin", "round");
 
-  // Wavy line (static shape, but animated with stroke offset)
-  const wavePath = "M2 12c1.5-2 3-2 4.5 0s3 2 4.5 0 3-2 4.5 0 3 2 4.5 0";
+  // Paths
+  const STRAIGHT = "M2 12H22";
+  const WAVE = "M2 12c1.5-2 3-2 4.5 0s3 2 4.5 0 3-2 4.5 0 3 2 4.5 0";
 
-  path.setAttribute("d", "M2 12H22"); // start with straight line
-
+  path.setAttribute("d", STRAIGHT); // start with straight line
   audioSVG.appendChild(path);
   audioBtn.appendChild(audioSVG);
 
-  let isPlaying = false;
-  audioBtn.addEventListener("click", () => {
-    isPlaying = !isPlaying;
+ let scrollBound = false;
+const setWave = () => { path.setAttribute("d", WAVE); path.classList.add("wave-animate"); };
+const setStraight = () => { path.setAttribute("d", STRAIGHT); path.classList.remove("wave-animate"); };
 
-    if (isPlaying) {
-      path.setAttribute("d", wavePath);
-      path.classList.add("wave-animate");
-    } else {
-      path.setAttribute("d", "M2 12H22");
-      path.classList.remove("wave-animate");
-    }
-  });
+audioBtn.addEventListener("click", async () => {
+  const playing = await audioDir.toggle({ startId: "intro" }); // play/pause with fades
+  if (playing) {
+    setWave();
+    if (!scrollBound) { bindScrollToClips(); scrollBound = true; }
+  } else {
+    setStraight();
+  }
+});
+
 
   // LET'S TALK button
   const talkBtn = document.createElement("button");
