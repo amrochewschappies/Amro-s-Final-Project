@@ -13,7 +13,10 @@ class AudioDirector {
     pauseFadeSec = 0.35,    // for pause/resume
     sfxGain = 1.0,          // relative loudness of SFX
     bpm = null,             // optional: set to quantize switches to bars
-    beatsPerBar = 4
+    beatsPerBar = 4,
+
+    // === Ambient Additions ===
+    ambient = null          // { url, loopStart?:0, loopEnd?:<dur>, gain?:0.45, enabled?:true, autoStart?:true }
   }) {
     this.clips = clips;
     this.defaultSfxUrl = defaultSfxUrl;
@@ -37,6 +40,13 @@ class AudioDirector {
     this.current = null;           // { id, node, gain, loopStart, loopEnd, buffer }
     this.isPaused = true;
     this.ready = false;
+
+    // === Ambient Additions ===
+    this.ambientCfg = ambient;
+    this.ambientBuffer = null;
+    this.ambientNode = null;
+    this.ambientGain = null;
+    this.ambientEnabled = !!(ambient && (ambient.enabled ?? true));
   }
 
   // ---------- Setup / Loading ----------
@@ -70,6 +80,12 @@ class AudioDirector {
     return buf;
   }
 
+  // === Ambient Additions ===
+  async _loadAmbient() {
+    if (!this.ambientCfg || this.ambientBuffer) return;
+    this.ambientBuffer = await this._decode(this.ambientCfg.url);
+  }
+
   async loadAll() {
     await this._ensureCtx();
     // load clips
@@ -85,6 +101,10 @@ class AudioDirector {
         .filter(Boolean)
         .map(url => this._loadSfx(url))
     );
+
+    // === Ambient Additions ===
+    await this._loadAmbient();
+
     this.ready = true;
   }
 
@@ -99,7 +119,7 @@ class AudioDirector {
     const loopStart = meta.loopStart ?? 0;
     const loopEnd = meta.loopEnd ?? buffer.duration;
     node.loopStart = loopStart;
-    node.loopEnd   = loopEnd;
+    node.loopEnd = loopEnd;
 
     const g = this.ctx.createGain();
     g.gain.value = 0;
@@ -109,8 +129,48 @@ class AudioDirector {
     return { node, gain: g, loopStart, loopEnd, buffer };
   }
 
+  // === Ambient Additions ===
+  _makeAmbientNode() {
+    if (!this.ambientBuffer) return null;
+    const node = this.ctx.createBufferSource();
+    node.buffer = this.ambientBuffer;
+    node.loop = true;
+    const loopStart = this.ambientCfg.loopStart ?? 0;
+    const loopEnd = this.ambientCfg.loopEnd ?? this.ambientBuffer.duration;
+    node.loopStart = loopStart;
+    node.loopEnd = loopEnd;
+
+    const g = this.ctx.createGain();
+    g.gain.value = this.ambientCfg.gain ?? 0.45;
+    node.connect(g);
+    g.connect(this.master);
+    return { node, gain: g };
+  }
+
+  _ensureAmbientStarted() {
+    if (!this.ambientEnabled) return;
+    if (!this.ambientBuffer) return;
+    if (this.ambientNode) return;
+    const a = this._makeAmbientNode();
+    if (!a) return;
+    const t = this.ctx.currentTime + 0.01;
+    a.node.start(t, this.ambientCfg.loopStart ?? 0);
+    this.ambientNode = a.node;
+    this.ambientGain = a.gain;
+  }
+
+  _stopAmbient() {
+    if (!this.ambientNode) return;
+    try { this.ambientNode.stop(); } catch { }
+    this.ambientNode = null;
+    this.ambientGain = null;
+  }
+
   async start(id) {
     if (!this.ready) await this.loadAll();
+
+    // === Ambient Additions ===
+    if (this.ambientCfg?.autoStart ?? true) this._ensureAmbientStarted();
 
     // stop previous if any
     if (this.current) this.stop();
@@ -130,7 +190,7 @@ class AudioDirector {
 
   stop() {
     if (!this.current) return;
-    try { this.current.node.stop(); } catch {}
+    try { this.current.node.stop(); } catch { }
     this.current = null;
   }
 
@@ -145,6 +205,8 @@ class AudioDirector {
     if (!this.ctx) return;
     await this.ctx.resume();
     this.isPaused = false;
+    // === Ambient Additions ===
+    this._ensureAmbientStarted();
     await this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
   }
 
@@ -228,47 +290,71 @@ class AudioDirector {
   async _fadeMasterTo(target, dur) {
     const t0 = this.ctx.currentTime;
     const g = this.master.gain;
-    try { g.setValueAtTime(g.value, t0); } catch {}
+    try { g.setValueAtTime(g.value, t0); } catch { }
     g.linearRampToValueAtTime(target, t0 + dur);
     await new Promise(r => setTimeout(r, dur * 1000));
+  }
+
+  async playOneShot(url, { gain = 1.0, at = null } = {}) {
+    if (!this.ready) await this.loadAll();
+    const buf = await this._loadSfx(url);
+    if (!buf) return;
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+
+    const g = this.ctx.createGain();
+    g.gain.value = Math.max(0, gain);
+    src.connect(g);
+    g.connect(this.master);
+
+    const t = Math.max(at ?? this.ctx.currentTime + 0.01, this.ctx.currentTime + 0.01);
+    src.start(t);
   }
 }
 
 
 
 // 1) Section clips (each loops while active)
-// Tip: WAV/OGG loop cleaner than MP3. loopStart/loopEnd are optional (seconds).
 const CLIPS = {
-  intro: { url: "../Assets/Test Song.mp3" /*, loopStart: 0, loopEnd: 8 */ },
-  verse: { url: "../Assets/Test Song.mp3" },
+  intro: { url: "../Assets/First Part.mp3" },
+  verse: { url: "../Assets/Second Part.mp3" },
   build: { url: "../Assets/Test Song.mp3" },
-  drop:  { url: "../Assets/Test Song.mp3" },
+  drop: { url: "../Assets/Car_Audio_V1.mp3" },
 };
 
-// 2) Default SFX (used when no specific transition SFX is defined)
+// 2) Default SFX
 const DEFAULT_SFX = "../Assets/whoosh.mp3";
 
-// 3) Transition-specific SFX (optional):
-// Key format: "fromId->toId"
+// 3) Transition-specific SFX
 const TRANSITION_SFX = {
-  "intro->verse": "../Assets/whoosh.mp3",
+  "intro->verse": "../Assets/Whoosh.mp3",
   "verse->build": "../Assets/whoosh.mp3",
-  "build->drop":  "../Assets/whoosh.mp3",
-  // You can also add "drop->verse": "...", etc.
+  "build->drop": "../Assets/whoosh.mp3",
 };
 
-// 4) Create a ready-to-use director instance
+// === Ambient Additions ===
+const AMBIENT = {
+  url: "../Assets/Rain Background Audio.mp3", // WAV/OGG loop recommended
+  loopStart: 0,
+  gain: 0.25,
+  enabled: true,
+  autoStart: true,
+};
+
 export const audioDir = new AudioDirector({
   clips: CLIPS,
-  defaultSfxUrl: DEFAULT_SFX,    // set to null if you don't want a default
-  transitionSfx: TRANSITION_SFX, // or {} if none
+  defaultSfxUrl: DEFAULT_SFX,
+  transitionSfx: TRANSITION_SFX,
   masterGain: 0.9,
   crossfadeSec: 0.28,
   pauseFadeSec: 0.35,
   sfxGain: 1.0,
-  bpm: null,                     // set e.g. 120 to enable bar quantize
+  bpm: null,
   beatsPerBar: 4,
+  ambient: AMBIENT, // added here
 });
+
 
 /* ========= Optional: Scroll wiring helper ========= */
 let _scrollBound = false;
@@ -283,11 +369,17 @@ export function bindScrollToClips() {
 
   const safe = (id) => { if (!audioDir.isPaused) audioDir.switchTo(id, { mask: true, quantizeToBar: false }); };
 
-  // Adjust selectors to your layout
-  window.ScrollTrigger.create({ trigger: "#hero",        start: "top top",  end: "bottom top", onEnter: () => safe("intro"), onEnterBack: () => safe("intro") });
-  window.ScrollTrigger.create({ trigger: "#section-3",   start: "top 60%",  onEnter: () => safe("verse") });
-  window.ScrollTrigger.create({ trigger: "#section-4",   start: "top 60%",  onEnter: () => safe("build") });
-  window.ScrollTrigger.create({ trigger: "#section-6",start: "top 60%",  onEnter: () => safe("drop") });
+  window.ScrollTrigger.create({ trigger: "#hero", start: "top top", end: "bottom top", onEnter: () => safe("intro"), onEnterBack: () => safe("intro") });
+  window.ScrollTrigger.create({ trigger: "#section-3", start: "top 60%", onEnter: () => safe("verse") });
+  window.ScrollTrigger.create({ trigger: "#section-4", start: "top 60%", onEnter: () => safe("build") });
+  window.ScrollTrigger.create({ trigger: "#section-6", start: "top 60%", onEnter: () => safe("drop") });
+
+  window.ScrollTrigger.create({
+    trigger: "#section-1",
+    start: "top 100%",
+    once: true,                           // fire a single time
+    onEnter: () => audioDir.playOneShot("../Assets/Vroom.mp3", { gain: 3.9 })
+  });
 
   window.addEventListener("load", () => setTimeout(() => window.ScrollTrigger.refresh(), 0));
 }

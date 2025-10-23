@@ -53,7 +53,9 @@ function goToSection(index, duration = 1000) { // duration = scroll speed in ms
     if (progress < 1) {
       requestAnimationFrame(step);
     } else {
-      isAnimating = false;
+      setTimeout(() => {
+        isAnimating = false;
+      }, 1000);
     }
   }
 
@@ -74,7 +76,6 @@ function findNearestSection() {
   return nearest;
 }
 
-// ❌ Removed the "Toggle snapping on/off depending on scroll position" block
 
 // ✅ Wheel control — always active
 window.addEventListener("wheel", (e) => {
