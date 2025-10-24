@@ -297,3 +297,20 @@ h1 {
 .indicator:hover {
   animation: flickerAnim 0.8s steps(1, end) infinite;
 }
+
+#blackout{
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;                 /* start invisible */
+  pointer-events: none;       /* never block clicks when transparent */
+  z-index: 9999;              /* above everything */
+  will-change: opacity;       /* smoother fades */
+}
+
+#bridge-4-6 { height: 200vh; } /* adjust to taste */
+
+#section-6-heading {
+  z-index: 10000;
+  opacity: 0;
+}

@@ -1,4 +1,4 @@
-import * as THREE from "three"; 
+import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -15,6 +15,8 @@ gsap.registerPlugin(ScrollTrigger);
 const loaderEl = document.getElementById("loader");
 const barEl = document.getElementById("loader-bar");
 const textEl = document.getElementById("loader-text");
+const blackoutEl = document.getElementById("blackout");
+const s6Heading = document.getElementById("section-6-heading");
 
 const manager = new THREE.LoadingManager();
 
@@ -37,11 +39,11 @@ manager.onLoad = () => {
 const scene = new THREE.Scene();
 
 const sizes = {
-    width: window.innerWidth,
-    height: window.innerHeight, 
+  width: window.innerWidth,
+  height: window.innerHeight,
 }
 
-const camera = new THREE.PerspectiveCamera(45,  sizes.width / sizes.height , 0.1, 10000);
+const camera = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 0.1, 10000);
 camera.position.z = 32;
 camera.position.y = -2;
 camera.position.x = 0.05;
@@ -61,7 +63,7 @@ scene.add(leftCarLight.target);
 scene.add(leftCarLight)
 
 const rightCarLight = new THREE.SpotLight(0xffffff, 0);
-rightCarLight.position.set(6.15,-0.3,20)
+rightCarLight.position.set(6.15, -0.3, 20)
 rightCarLight.castShadow = false
 rightCarLight.target.position.copy(camera.position);
 scene.add(rightCarLight.target);
@@ -69,7 +71,7 @@ scene.add(rightCarLight)
 
 const canvas = document.querySelector(".webgl");
 
-const renderer = new THREE.WebGLRenderer({canvas});
+const renderer = new THREE.WebGLRenderer({ canvas });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setClearColor(0x000000);
 renderer.domElement.style.opacity = 0;
@@ -79,9 +81,9 @@ composer.addPass(new RenderPass(scene, camera));
 
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  1.5, 
+  1.5,
   0.4,
-  0.85 
+  0.85
 );
 composer.addPass(bloomPass);
 
@@ -89,7 +91,7 @@ const gltfLoader = new GLTFLoader(manager);
 let mixer;
 let actions = [];
 
-gltfLoader.load("../Assets/Wheels.glb", (gltf) => {
+gltfLoader.load("../Assets/Prefinal.glb", (gltf) => {
   gltf.scene.scale.set(2, 2, 2);
   scene.add(gltf.scene);
 
@@ -101,27 +103,86 @@ gltfLoader.load("../Assets/Wheels.glb", (gltf) => {
       a.setLoop(THREE.LoopRepeat, Infinity);
       a.clampWhenFinished = false;
       a.enabled = true;
-      a.play();     
-      a.paused = true;   
+      a.play();
+      a.paused = true;
       return a;
     });
 
+    // After you create `actions` (keep your existing code above intact)
+    const section6RevealTL = gsap.timeline({ paused: true });
+
+    section6RevealTL
+      .add(() => {
+        gsap.set(s6Heading, {
+          zIndex: 10000, opacity: 0
+        });
+      })
+      .add(() => { actions.forEach(a => a.paused = true); }) // pause while black
+      .to({}, { duration: 0.6 })
+      .to(s6Heading, {
+        opacity: 1,
+        duration: 0.05,
+        repeat: 30,           // number of blinks
+        yoyo: true,
+        ease: "steps(1)"
+      }, 0.9)                              // optional hold on full black
+      .to(s6Heading, {
+        opacity: 1,
+        duration: 0.3,
+        ease: "power2.out"
+      })
+      .to(blackoutEl, {
+        opacity: 0,
+        duration: 3.0,
+        ease: "power2.out",
+        onStart: () => { blackoutEl.style.pointerEvents = "auto"; },
+        onComplete: () => {
+          blackoutEl.style.pointerEvents = "none";
+          actions.forEach(a => a.paused = false);            // start anims after reveal
+        }
+      });
+
+
+    // The ONLY ScrollTrigger for section-6
     ScrollTrigger.create({
       trigger: "#section-6",
       start: "top center",
       end: "bottom center",
-      onEnter: () => { actions.forEach(a => a.paused = false); },
-      onLeave: () => { actions.forEach(a => a.paused = true); },
-      onEnterBack: () => { actions.forEach(a => a.paused = false); },
-      onLeaveBack: () => { actions.forEach(a => a.paused = true); },
+      onEnter: () => section6RevealTL.restart(true),
+      onEnterBack: () => section6RevealTL.restart(true),
+      onLeave: () => {
+        actions.forEach(a => a.paused = true);
+        gsap.set(blackoutEl, { opacity: 0, pointerEvents: "none" });
+      },
+      onLeaveBack: () => {
+        actions.forEach(a => a.paused = true);
+        gsap.set(blackoutEl, { opacity: 0, pointerEvents: "none" });
+      }
     });
+
   }
 }, undefined, (err) => console.error("GLB load error:", err));
 
-const RAIN_COUNT = 15000;                      
-const RAIN_AREA = { w: 160, h: 120, d: 160 };   
-const FALL_MIN = 20, FALL_MAX = 34;             
-const WIND = { x: 1.2, z: -0.6 };              
+gsap.to(blackoutEl, {
+  opacity: 1,
+  ease: "power1.inOut",
+  scrollTrigger: {
+    trigger: "#bridge-4-6",
+    start: "top top",
+    end: "bottom top",
+    scrub: true,
+    pin: true,
+    anticipatePin: 1,
+    onEnter: () => blackoutEl.style.pointerEvents = "auto",
+    onLeave: () => blackoutEl.style.pointerEvents = "auto",
+    onLeaveBack: () => blackoutEl.style.pointerEvents = "none",
+  }
+});
+
+const RAIN_COUNT = 15000;
+const RAIN_AREA = { w: 160, h: 120, d: 160 };
+const FALL_MIN = 20, FALL_MAX = 34;
+const WIND = { x: 1.2, z: -0.6 };
 
 
 const rainGroup = new THREE.Group();
@@ -129,7 +190,7 @@ camera.add(rainGroup);
 
 const rainGeom = new THREE.BufferGeometry();
 const positions = new Float32Array(RAIN_COUNT * 3);
-const speeds    = new Float32Array(RAIN_COUNT);
+const speeds = new Float32Array(RAIN_COUNT);
 
 for (let i = 0; i < RAIN_COUNT; i++) {
   const ix = i * 3;
@@ -174,9 +235,9 @@ function updateRain(dt) {
     }
 
     if (pos[ix + 0] < -RAIN_AREA.w * 0.5) pos[ix + 0] += RAIN_AREA.w;
-    if (pos[ix + 0] >  RAIN_AREA.w * 0.5) pos[ix + 0] -= RAIN_AREA.w;
+    if (pos[ix + 0] > RAIN_AREA.w * 0.5) pos[ix + 0] -= RAIN_AREA.w;
     if (pos[ix + 2] < -RAIN_AREA.d * 0.5) pos[ix + 2] += RAIN_AREA.d;
-    if (pos[ix + 2] >  RAIN_AREA.d * 0.5) pos[ix + 2] -= RAIN_AREA.d;
+    if (pos[ix + 2] > RAIN_AREA.d * 0.5) pos[ix + 2] -= RAIN_AREA.d;
 
     changed = true;
   }
@@ -186,19 +247,19 @@ function updateRain(dt) {
 
 
 
-let scrollProgress = 0; 
+let scrollProgress = 0;
 let maxScroll = document.body.scrollHeight - window.innerHeight;
 
 
 window.addEventListener("scroll", () => {
-    scrollProgress = window.scrollY / maxScroll;
+  scrollProgress = window.scrollY / maxScroll;
 });
 
 const rgbeLoader = new RGBELoader(manager);
 rgbeLoader.load('../Assets/DarkStorm4K.hdr', (tex) => {
   tex.mapping = THREE.EquirectangularReflectionMapping;
   // scene.environment = tex;
-  scene.background = tex;    
+  scene.background = tex;
   scene.environment = null;
 });
 
@@ -213,7 +274,7 @@ textureLoader.load("../Assets/Car Light.png", (texture) => {
   });
 
   const glowSprite = new THREE.Sprite(spriteMaterial);
-  glowSprite.scale.set(2, 2, 1); 
+  glowSprite.scale.set(2, 2, 1);
   glowSprite.position.copy(leftCarLight.position);
 
   scene.add(glowSprite);
@@ -229,7 +290,7 @@ textureLoader.load("../Assets/Car Light.png", (texture) => {
   });
 
   const rightGlowSprite = new THREE.Sprite(spriteMaterial);
-  rightGlowSprite.scale.set(2, 2, 1); 
+  rightGlowSprite.scale.set(2, 2, 1);
   rightGlowSprite.position.copy(rightCarLight.position);
 
   scene.add(rightGlowSprite);
@@ -238,29 +299,29 @@ textureLoader.load("../Assets/Car Light.png", (texture) => {
 const clock = new THREE.Clock();
 
 function animate() {
-    requestAnimationFrame(animate);
-    const delta = clock.getDelta();
-    updateRain(delta);
-    if (mixer) mixer.update(delta);
-    composer.render(); 
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  updateRain(delta);
+  if (mixer) mixer.update(delta);
+  composer.render();
 }
 
 animate();
 
 window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
 });
 
 gsap.to([leftCarLight, rightCarLight], {
-    scrollTrigger: {
-        trigger: "#section-1",
-        start: "top bottom",
-        end: "centre top",
-        scrub: true,
-    },
-    intensity: 150,
+  scrollTrigger: {
+    trigger: "#section-1",
+    start: "top bottom",
+    end: "centre top",
+    scrub: true,
+  },
+  intensity: 150,
 });
 
 // gsap.to(directionalLight, {
@@ -284,23 +345,23 @@ gsap.to([leftCarLight, rightCarLight], {
 // });
 
 gsap.to(camera.position, {
-    scrollTrigger: {
-        trigger: "#section-3",
-        start: "top center",
-        end: "bottom center",
-        scrub: true,
-    },
-    z: 48, 
+  scrollTrigger: {
+    trigger: "#section-3",
+    start: "top center",
+    end: "bottom center",
+    scrub: true,
+  },
+  z: 48,
 });
 
 gsap.to(directionalLight, {
-    scrollTrigger: {
-        trigger: "#section-4",
-        start: "top center",
-        end: "bottom center",
-        scrub: true,
-    },
-    intensity: 0.4,
+  scrollTrigger: {
+    trigger: "#section-4",
+    start: "top center",
+    end: "bottom center",
+    scrub: true,
+  },
+  intensity: 0.4,
 });
 
 
@@ -340,16 +401,16 @@ let projects_tl = gsap.timeline({
 
 projects_tl.to(camera.position, {
   x: -0.2,
-  y: -5.5,  
+  y: -5.5,
   z: -35,
   ease: "none"
 })
-.to(camera.rotation, {
-  x: 0,
-  y: -3.14,
-  z: 0,
-  ease: "none"
-}, "<");
+  .to(camera.rotation, {
+    x: 0,
+    y: -3.14,
+    z: 0,
+    ease: "none"
+  }, "<");
 
 projects_tl.to(directionalLight.position, {
   x: -20,
