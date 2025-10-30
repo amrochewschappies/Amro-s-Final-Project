@@ -1,12 +1,12 @@
-import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { OrbitControls } from "three/examples/jsm/Addons.js";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { MotionPathPlugin } from "gsap/MotionPathPlugin";
-import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import * as THREE from "https://unpkg.com/three@0.159.0/build/three.module.js";
+import { GLTFLoader } from "https://unpkg.com/three@0.159.0/examples/jsm/loaders/GLTFLoader.js";
+import { OrbitControls } from "https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js";
+import { ScrollTrigger } from "https://cdn.skypack.dev/gsap/ScrollTrigger";
+import { EffectComposer } from "https://unpkg.com/three@0.159.0/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "https://unpkg.com/three@0.159.0/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "https://unpkg.com/three@0.159.0/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { MotionPathPlugin } from "https://cdn.skypack.dev/gsap/MotionPathPlugin";
+import { RGBELoader } from "https://unpkg.com/three@0.159.0/examples/jsm/loaders/RGBELoader.js";
 
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
