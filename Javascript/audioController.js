@@ -347,10 +347,10 @@ export function bindScrollToClips() {
     start: "top 60%",            // keep your current position
     onEnter: () => {
       // delay starting "drop" by 1.2s (tweak to taste)
-      dropTimer = gsap.delayedCall(4.7, () => safe("drop"));
+      dropTimer = gsap.delayedCall(6.37, () => safe("drop"));
     },
     onEnterBack: () => {
-      dropTimer = gsap.delayedCall(4.7, () => safe("drop"));
+      dropTimer = gsap.delayedCall(6.37, () => safe("drop"));
     },
     onLeave: () => {              // cancel if we leave before the delay finishes
       if (dropTimer) { dropTimer.kill(); dropTimer = null; }
@@ -369,3 +369,4 @@ export function bindScrollToClips() {
 
   window.addEventListener("load", () => setTimeout(() => window.ScrollTrigger.refresh(), 0));
 }
+

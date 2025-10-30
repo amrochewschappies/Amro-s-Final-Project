@@ -222,6 +222,7 @@ h1 {
   position: relative;
   color: rgba(255, 255, 255, 0.216); 
   mix-blend-mode: difference;  
+  opacity: 0;
 }
 
 #number-plate{
@@ -302,15 +303,43 @@ h1 {
   position: fixed;
   inset: 0;
   background: #000;
-  opacity: 0;                 /* start invisible */
-  pointer-events: none;       /* never block clicks when transparent */
-  z-index: 9999;              /* above everything */
-  will-change: opacity;       /* smoother fades */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 6000ms ease; /* tweak as needed */
+  z-index: 9999;
+  will-change: opacity;
 }
 
+
 #bridge-4-6 { height: 200vh; } /* adjust to taste */
+
+#bridge-6-7 { height: 200vh; } /* adjust to taste */
 
 #section-6-heading {
   z-index: 10000;
   opacity: 0;
+}
+
+.visual-text {
+  opacity: 0;
+  transition: opacity 5.6s ease;
+}
+
+.visual-text.visible {
+  opacity: 1;
+}
+
+#blackout.is-visible{
+  opacity: 1;
+  pointer-events: auto;
+  transition: all 700ms ease;
+}
+
+@keyframes s6Blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.s6-blink {
+  animation: s6Blink 80ms steps(1) 30; /* ~30 blinks */
 }

@@ -20,10 +20,10 @@ export function loadNavbar(CurrentPageName) {
   // LEFT - Brand Name
   const nameSection = document.createElement("div");
   nameSection.classList.add("navbar-left");
-  const name = document.createElement("span");
-  name.classList.add("navbar-name");
-  name.innerText = "Amro";
-  nameSection.appendChild(name);
+  const logo = document.createElement("img");
+  logo.classList.add("logo-image")
+  logo.src = "../Assets/Amros Logo.png"
+  nameSection.appendChild(logo);
 
   // RIGHT - Buttons
   const rightSection = document.createElement("div");

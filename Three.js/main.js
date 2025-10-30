@@ -17,6 +17,7 @@ const barEl = document.getElementById("loader-bar");
 const textEl = document.getElementById("loader-text");
 const blackoutEl = document.getElementById("blackout");
 const s6Heading = document.getElementById("section-6-heading");
+let s6InView = false;
 
 const manager = new THREE.LoadingManager();
 
@@ -34,6 +35,7 @@ manager.onProgress = (url, loaded, total) => {
 manager.onLoad = () => {
   gsap.to("#loader", { autoAlpha: 0, duration: 0.5, onComplete: () => loaderEl?.remove() });
   gsap.to(".webgl", { autoAlpha: 1, duration: 0.5 });
+  ScrollTrigger.refresh();
 };
 
 const scene = new THREE.Scene();
@@ -108,76 +110,146 @@ gltfLoader.load("../Assets/Prefinal.glb", (gltf) => {
       return a;
     });
 
-    // After you create `actions` (keep your existing code above intact)
-    const section6RevealTL = gsap.timeline({ paused: true });
+    const toFirstFrame = () => {
+      if (!mixer) return;
+      actions.forEach(a => {
+        a.enabled = true;
+        a.reset();     // sets time=0 and weight=1
+        a.paused = true;
+      });
+      mixer.setTime(0); // make sure mixer evaluates at 0
+    };
 
+    const playFromStart = () => {
+      toFirstFrame();
+      actions.forEach(a => (a.paused = false));
+    };
+
+    const section6RevealTL = gsap.timeline({ paused: true });
+    // After you create `actions` (keep your existing code above intact)
     section6RevealTL
       .add(() => {
-        gsap.set(s6Heading, {
-          zIndex: 10000, opacity: 0
-        });
+        // Heading prep
+        gsap.set(s6Heading, { zIndex: 10000, opacity: 1 });
+        setTimeout(() => {
+          s6Heading?.classList.add('s6-blink'); // optional blink
+        }, 1000);
       })
-      .add(() => { actions.forEach(a => a.paused = true); }) // pause while black
-      .to({}, { duration: 0.6 })
-      .to(s6Heading, {
-        opacity: 1,
-        duration: 0.05,
-        repeat: 30,           // number of blinks
-        yoyo: true,
-        ease: "steps(1)"
-      }, 0.9)                              // optional hold on full black
-      .to(s6Heading, {
-        opacity: 1,
-        duration: 0.3,
-        ease: "power2.out"
+      .to({}, { duration: 2.9 }) // hold on black while blinking
+      .add(() => s6Heading?.classList.remove('s6-blink'))
+      .to({}, { duration: 0.3 }) // settle
+      .add(() => {
+        unlockBlackout();                 // was hideBlackout()
+        if (s6InView) actions.forEach(a => a.paused = false);
+        else { actions.forEach(a => { a.reset(); a.paused = true; }); mixer?.setTime(0); }
       })
-      .to(blackoutEl, {
-        opacity: 0,
-        duration: 3.0,
-        ease: "power2.out",
-        onStart: () => { blackoutEl.style.pointerEvents = "auto"; },
-        onComplete: () => {
-          blackoutEl.style.pointerEvents = "none";
-          actions.forEach(a => a.paused = false);            // start anims after reveal
+      .add(() => {
+        // Find the index of #section-6 and go to the next one using your existing logic
+        const sections = Array.from(document.querySelectorAll(".lock-section"));
+        const i = sections.findIndex(el => el.id === "section-6");
+        const next = sections[i + 1];
+        if (!next) return;
+
+        if (typeof window.goToSection === "function") {
+          window.goToSection(i + 1);         // ✅ uses your current snap/scroll logic
+        } else {
+          // Fallback if goToSection isn't global
+          next.scrollIntoView({ behavior: "smooth", block: "start" });
         }
-      });
+      }, "+=20.3") // small settle delay a
+      .add(async () => {
+        if (audioDir.current) {
+          await audioDir._fadeMasterTo(0, 5.2);   // fade out over 1.2s
+          audioDir.stop();
+        }
+        await audioDir.start("drop");
+      }, "+=0.8")
 
 
-    // The ONLY ScrollTrigger for section-6
     ScrollTrigger.create({
       trigger: "#section-6",
       start: "top center",
       end: "bottom center",
-      onEnter: () => section6RevealTL.restart(true),
-      onEnterBack: () => section6RevealTL.restart(true),
+
+      onEnter: () => {
+        s6InView = true;
+        actions.forEach(a => { a.enabled = true; a.reset(); a.paused = true; });
+        mixer?.setTime(0);
+
+        lockBlackout();            // was showBlackout()
+        section6RevealTL.restart();
+      },
+      onEnterBack: () => {
+        s6InView = true;
+        actions.forEach(a => { a.enabled = true; a.reset(); a.paused = true; });
+        mixer?.setTime(0);
+
+        lockBlackout();
+        section6RevealTL.restart();
+      },
       onLeave: () => {
-        actions.forEach(a => a.paused = true);
-        gsap.set(blackoutEl, { opacity: 0, pointerEvents: "none" });
+        s6InView = false;
+        actions.forEach(a => { a.reset(); a.paused = true; });
+        mixer?.setTime(0);
+        section6RevealTL.pause(0);
+        lockBlackout();
+        setTimeout(() => {
+          unlockBlackout();
+        }, 1000);
       },
       onLeaveBack: () => {
-        actions.forEach(a => a.paused = true);
-        gsap.set(blackoutEl, { opacity: 0, pointerEvents: "none" });
+        s6InView = false;
+        actions.forEach(a => { a.reset(); a.paused = true; });
+        mixer?.setTime(0);
+        section6RevealTL.pause(0);
+        lockBlackout();
+        setTimeout(() => {
+          unlockBlackout();
+        }, 1000);
       }
     });
 
   }
 }, undefined, (err) => console.error("GLB load error:", err));
 
-gsap.to(blackoutEl, {
-  opacity: 1,
-  ease: "power1.inOut",
-  scrollTrigger: {
-    trigger: "#bridge-4-6",
-    start: "top top",
-    end: "bottom top",
-    scrub: true,
-    pin: true,
-    anticipatePin: 1,
-    onEnter: () => blackoutEl.style.pointerEvents = "auto",
-    onLeave: () => blackoutEl.style.pointerEvents = "auto",
-    onLeaveBack: () => blackoutEl.style.pointerEvents = "none",
-  }
+let blackoutLocks = 0;
+function _applyBlackout() {
+  if (blackoutLocks > 0) blackoutEl?.classList.add('is-visible');
+  else blackoutEl?.classList.remove('is-visible');
+}
+function lockBlackout() { blackoutLocks++; _applyBlackout(); }
+function unlockBlackout() { blackoutLocks = Math.max(0, blackoutLocks - 1); _applyBlackout(); }
+
+function showBlackout() { blackoutEl?.classList.add('is-visible'); }
+function hideBlackout() { blackoutEl?.classList.remove('is-visible'); }
+
+// Bridge 4→6
+// Bridge 4→6
+ScrollTrigger.create({
+  trigger: "#bridge-4-6",
+  start: "top top",
+  end: "bottom top",
+  // NO scrub here
+  onEnter: lockBlackout,
+  onEnterBack: lockBlackout,
+  onLeave: unlockBlackout,
+  onLeaveBack: unlockBlackout,
+  refreshPriority: 10, // ensure bridges register early
 });
+
+// Bridge 6→7
+ScrollTrigger.create({
+  trigger: "#bridge-6-7",
+  start: "top top",
+  end: "bottom top",
+  onEnter: lockBlackout,
+  onEnterBack: lockBlackout,
+  onLeave: unlockBlackout,
+  onLeaveBack: unlockBlackout,
+  refreshPriority: 10,
+});
+
+
 
 const RAIN_COUNT = 15000;
 const RAIN_AREA = { w: 160, h: 120, d: 160 };
@@ -302,7 +374,7 @@ function animate() {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
   updateRain(delta);
-  if (mixer) mixer.update(delta);
+  if (mixer && s6InView) mixer.update(delta);
   composer.render();
 }
 

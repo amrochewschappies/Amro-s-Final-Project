@@ -1,6 +1,7 @@
 const sections = document.querySelectorAll(".lock-section");
 let stops = Array.from(sections).map(el => el.offsetTop);
 
+
 const TOLERANCE = 50; // px tolerance to decide "before/after" a stop
 let currentIndex = -1; // -1 = not initialized for snapping
 let isAnimating = false;
@@ -129,6 +130,7 @@ window.addEventListener("keydown", (e) => {
     goToSection(target);
   }
 });
+
 
 
 // -------------------

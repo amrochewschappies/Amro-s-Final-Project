@@ -152,3 +152,9 @@ body{
     gap: 20vh;
 
 }
+
+.logo-image{
+    aspect-ratio: 1 / 1;
+    width: 16%;
+    filter: saturate(130px);
+}
