@@ -11,6 +11,9 @@ const navPages = [
   { name: "Contact", href: "/Rasha-Foundation/Contact/contact.html" },
 ];
 
+
+const logoUrl = new URL('../Assets/Amros Logo.png', import.meta.url).href;
+
 export function loadNavbar(CurrentPageName) {
   const nav = document.querySelector("#nav-bar");
 
@@ -22,7 +25,7 @@ export function loadNavbar(CurrentPageName) {
   nameSection.classList.add("navbar-left");
   const logo = document.createElement("img");
   logo.classList.add("logo-image")
-  logo.src = "../Assets/Amros Logo.png"
+  logo.src = logoUrl
   nameSection.appendChild(logo);
 
   // RIGHT - Buttons

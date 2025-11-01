@@ -1,16 +1,18 @@
-import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
-import { GLTFLoader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
-import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
-import { EffectComposer } from "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { RGBELoader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/RGBELoader.js";
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 
 
 
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
-gsap.registerPlugin(ScrollTrigger);
 
 const loaderEl = document.getElementById("loader");
 const barEl = document.getElementById("loader-bar");
@@ -93,7 +95,13 @@ const gltfLoader = new GLTFLoader(manager);
 let mixer;
 let actions = [];
 
-gltfLoader.load("../Assets/Prefinal.glb", (gltf) => {
+
+const glbUrl = new URL('../Assets/Prefinal.glb', import.meta.url).href;
+const hdrUrl = new URL('../Assets/DarkStorm4K.hdr', import.meta.url).href;
+const imgUrl = new URL('../Assets/Car Light.png', import.meta.url).href;
+
+
+gltfLoader.load(glbUrl, (gltf) => {
   gltf.scene.scale.set(2, 2, 2);
   scene.add(gltf.scene);
 
@@ -328,7 +336,7 @@ window.addEventListener("scroll", () => {
 });
 
 const rgbeLoader = new RGBELoader(manager);
-rgbeLoader.load('../Assets/DarkStorm4K.hdr', (tex) => {
+rgbeLoader.load(hdrUrl, (tex) => {
   tex.mapping = THREE.EquirectangularReflectionMapping;
   // scene.environment = tex;
   scene.background = tex;
@@ -336,7 +344,7 @@ rgbeLoader.load('../Assets/DarkStorm4K.hdr', (tex) => {
 });
 
 const textureLoader = new THREE.TextureLoader(manager);
-textureLoader.load("../Assets/Car Light.png", (texture) => {
+textureLoader.load(imgUrl, (texture) => {
   const spriteMaterial = new THREE.SpriteMaterial({
     map: texture,
     color: 0xffffff,
@@ -352,7 +360,7 @@ textureLoader.load("../Assets/Car Light.png", (texture) => {
   scene.add(glowSprite);
 });
 
-textureLoader.load("../Assets/Car Light.png", (texture) => {
+textureLoader.load(imgUrl, (texture) => {
   const spriteMaterial = new THREE.SpriteMaterial({
     map: texture,
     color: 0xffffff,
