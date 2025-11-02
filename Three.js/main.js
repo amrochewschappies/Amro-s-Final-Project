@@ -9,6 +9,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import '../Javascript/IntertactiveAnimations.js'
+import { audioDir } from '../Javascript/audioController.js';
 
 
 
@@ -21,6 +22,7 @@ const textEl = document.getElementById("loader-text");
 const blackoutEl = document.getElementById("blackout");
 const s6Heading = document.getElementById("section-6-heading");
 let s6InView = false;
+
 
 const manager = new THREE.LoadingManager();
 
@@ -233,13 +235,35 @@ function showBlackout() { blackoutEl?.classList.add('is-visible'); }
 function hideBlackout() { blackoutEl?.classList.remove('is-visible'); }
 
 // Bridge 4→6
+let playedBlackout4_6 = false;
+
 // Bridge 4→6
 ScrollTrigger.create({
   trigger: "#bridge-4-6",
   start: "top top",
   end: "bottom top",
   // NO scrub here
-  onEnter: lockBlackout,
+  onEnter: () => {
+    lockBlackout();
+
+    // fire only once per pass; remove the guard if you want it every time
+    if (!playedBlackout4_6) {
+      playedBlackout4_6 = true;
+
+      // 1) make sure we’re on the verse right now (optional, keeps things tidy)
+      audioDir.switchTo("verse", { mask: true, quantizeToBar: false });
+
+      // 2) play interlude while screen is black; switch to "drop" when it ends
+      audioDir.playInterludeAndSwitch(
+        new URL("../Assets/Flicker.mp3", import.meta.url).toString(),
+        "drop",
+        {
+          duckTo: 0,          // fully duck verse under blackout
+          interludeGain: 1.0, // interlude loudness
+          crossfade: 0.25
+        }
+      );
+    }},
   onEnterBack: lockBlackout,
   onLeave: unlockBlackout,
   onLeaveBack: unlockBlackout,
