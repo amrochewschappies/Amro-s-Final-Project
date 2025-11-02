@@ -8,6 +8,7 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+import '../Javascript/IntertactiveAnimations.js'
 
 
 
