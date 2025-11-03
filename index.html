@@ -74,22 +74,49 @@
     <div id="bridge-6-7"></div>
 
     <section class="sections lock-section" id="projects-section">
-      <div id="carousel-section">
-        <div id="number-plate">Proj#1-GP</div>
-        <div id="project-gallery">
-          <img src="./Assets/Ferrari Background.png" alt="project-image" id="project-image">
-          <p id="project-content">Lorem ipsum dolor sit amet consectetur adipisicing elit. Consectetur non
-            necessitatibus quisquam iusto id
-            laboriosam nostrum ex? Commodi in suscipit inventore quam, veritatis quo repudiandae obcaecati assumenda
-            fugit sapiente? Exercitationem.
-          </p>
-        </div>
-        <div class="carousel-controls">
-          <button class="indicator left-indicator">&#8592;</button>
-          <button class="indicator right-indicator">&#8594;</button>
-        </div>
-      </div>
+      <div id="number-plate">######-GP</div>
+      <div id="my-bouncecards" class="bounceCardsContainer"></div>
     </section>
+
+
+    <!-- index.html (bottom, before </body>) -->
+    <script type="module">
+      import { createBounceCards } from "./Javascript/bounceCards.js";
+
+      const images = [
+        "./Assets/Ferrari Background.png",
+        "./Assets/Groveeee Image.png",
+        "./Assets/Mlungisi Logo.png",
+      ];
+
+      const labels = [
+        "FERRARI-GP",
+        "GROVEEEE-GP",
+        "MLUNGISI-GP",
+      ]
+      
+      const transformStyles = [
+        "rotate(5deg) translate(-150px)",
+        "rotate(0deg) translate(-70px)",
+        "rotate(-5deg)",
+        "rotate(5deg) translate(70px)",
+        "rotate(-5deg) translate(150px)",
+      ];
+
+      createBounceCards("#my-bouncecards", {
+        images,
+        labels,
+        containerWidth: 500,
+        containerHeight: 250,
+        animationDelay: 1,
+        animationStagger: 0.08,
+        easeType: "elastic.out(1, 0.5)",
+        transformStyles,
+        enableHover: true,   // set to false to disable hover behavior
+      });
+    </script>
+
+
     <script type="module" src="./Three.js/main.js"></script>
     <section>
       <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Tempore error debitis voluptatibus quo eaque cum,
