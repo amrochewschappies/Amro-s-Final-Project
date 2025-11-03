@@ -42,6 +42,7 @@ class AudioDirector {
     // ACTIVE music track "selection" (we won't stop sources anymore)
     this.current = null;
 
+    this.userMuted = true;
     // Treat "paused" as muted so transport keeps running
     this.isPaused = true;
     this.ready = false;
@@ -180,18 +181,19 @@ class AudioDirector {
     this._ensureAmbientStarted();
 
     const t = this.ctx.currentTime;
-
     const next = this._ensureTrack(id);
 
-    // bring master up to audible if we were "paused" (muted)
-    await this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
-    this.isPaused = false;
+    // ⛔ remove the unconditional unmute
+    // await this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
 
-    // fade selected track up
+    // ✅ only raise master if user isn’t muted
+    if (!this.userMuted) {
+      await this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
+    }
+
     next.gain.gain.setValueAtTime(next.gain.gain.value, t);
     next.gain.gain.linearRampToValueAtTime(1, t + this.crossfadeSec);
 
-    // fade all others down
     for (const [otherId, tr] of this.tracks) {
       if (otherId === id) continue;
       tr.gain.gain.setValueAtTime(tr.gain.gain.value, t);
@@ -200,6 +202,7 @@ class AudioDirector {
 
     this.current = { id, ...next };
   }
+
 
   // Stop = just fade all tracks down (do NOT stop sources)
   stop() {
@@ -215,15 +218,17 @@ class AudioDirector {
   // Pause/Play become Mute/Unmute so transport keeps running
   async pause() {
     if (!this.ctx) return;
+    this.userMuted = true;
     await this._fadeMasterTo(0, this.pauseFadeSec);
-    this.isPaused = true; // muted
+    this.isPaused = true; // keep if you need it elsewhere
   }
 
   async play() {
     if (!this.ctx) return;
     this._ensureAmbientStarted();
+    this.userMuted = false;
     await this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
-    this.isPaused = false; // unmuted
+    this.isPaused = false;
   }
 
   async toggle({ startId }) {
@@ -234,6 +239,7 @@ class AudioDirector {
     if (this.isPaused) { await this.play(); return true; }
     else { await this.pause(); return false; }
   }
+
 
   // Switch = gain crossfade between already-running (or just-started) tracks
   async switchTo(id, { mask = true, quantizeToBar = false } = {}) {
@@ -319,74 +325,136 @@ class AudioDirector {
     src.start(t);
   }
 
-  // ---- Interlude during blackout (duck -> one-shot -> switch) ----
-pendingInterlude = null; // class field (declare near other fields)
+  _restartTrackAt(id, at, offset = null) {
+    const buffer = this.buffers.get(id);
+    if (!buffer) return null;
+    const meta = this.clips[id] || {};
+    const loopStart = meta.loopStart ?? 0;
+    const loopEnd = meta.loopEnd ?? buffer.duration;
 
-async playInterludeAndSwitch(url, nextId, {
-  duckTo = 0,
-  interludeGain = 1.0,
-  crossfade = this.crossfadeSec,
-  postDelaySec = 0,            // NEW: extra delay after SFX ends
-  quantizeToBar = false        // optional: land on a bar if bpm provided
-} = {}) {
-  if (!this.ready) await this.loadAll();
+    // reuse existing gain if present; otherwise create one
+    let tr = this.tracks.get(id);
+    if (!tr) {
+      const g = this.ctx.createGain();
+      g.gain.value = 0;
+      g.connect(this.master);
+      tr = { gain: g, loopStart, loopEnd, buffer };
+    } else {
+      // stop and disconnect the old source so we can “restart” phase
+      try { tr.node.stop(at); } catch { }
+      try { tr.node.disconnect(); } catch { }
+      tr.loopStart = loopStart;
+      tr.loopEnd = loopEnd;
+      tr.buffer = buffer;
+    }
 
-  // make sure both tracks exist so the switch can be immediate later
-  if (nextId) this._ensureTrack?.(nextId);
+    const node = this.ctx.createBufferSource();
+    node.buffer = buffer;
+    node.loop = true;
+    node.loopStart = loopStart;
+    node.loopEnd = loopEnd;
+    node.connect(tr.gain);
 
-  const now = this.ctx.currentTime;
+    const startOffset = offset ?? loopStart;
+    node.start(at, startOffset);
 
-  // 1) Duck current loop (gain-only)
-  if (this.current) {
-    const g = this.current.gain.gain;
-    g.setValueAtTime(g.value, now);
-    g.linearRampToValueAtTime(duckTo, now + crossfade);
+    tr.node = node;
+    this.tracks.set(id, tr);
+    return tr;
   }
 
-  // 2) Play the interlude one-shot over master (respects mute if you’re muted)
-  const buf = await this._loadSfx(url);
-  if (!buf) return;
 
-  // cancel any previous interlude schedule
-  if (this.pendingInterlude && this.pendingInterlude.cancel) this.pendingInterlude.cancel();
+  // ---- Interlude during blackout (duck -> one-shot -> switch) ----
+  pendingInterlude = null; // class field (declare near other fields)
 
-  const src = this.ctx.createBufferSource();
-  src.buffer = buf;
-  const g = this.ctx.createGain();
-  g.gain.value = Math.max(0, interludeGain);
-  src.connect(g);
-  g.connect(this.master);
-  const tStart = Math.max(now + 0.01, now);
-  src.start(tStart);
+  async playInterludeAndSwitch(url, nextId, {
+    duckTo = 0,
+    interludeGain = 1.0,
+    crossfade = this.crossfadeSec,
+    postDelaySec = 0,      // can be negative to start before flicker ends
+    quantizeToBar = false,
+    freshNext = true
+  } = {}) {
+    if (!this.ready) await this.loadAll();
 
-  let cancelled = false;
-  this.pendingInterlude = {
-    cancel: () => { cancelled = true; try { src.stop(); } catch {} },
-  };
+    const now = this.ctx.currentTime;
 
-  // 3) When it ends, crossfade to nextId and clear
-  const tEnd = tStart + buf.duration;
-  const onEnd = async () => {
-    if (cancelled) return;
-    if (nextId) {
-      // If you were muted, the switch still happens under master=0
-      await new Promise(r => setTimeout(r, Math.max(0, postDelaySec * 1000)));
-      await this.switchTo(nextId, { mask: true, quantizeToBar });
+    // 1) Duck current
+    if (this.current) {
+      const g = this.current.gain.gain;
+      g.setValueAtTime(g.value, now);
+      g.linearRampToValueAtTime(duckTo, now + crossfade);
     }
-    this.pendingInterlude = null;
-  };
 
-  // Web Audio has no "ended" event on BufferSource in all browsers reliably;
-  // schedule via timeout aligned with audio time:
-  const ms = Math.max(0, (tEnd - this.ctx.currentTime) * 1000);
-  setTimeout(onEnd, ms);
-}
+    // 2) Load interlude
+    const buf = await this._loadSfx(url);
+    if (!buf) return;
 
-cancelInterlude() {
-  if (this.pendingInterlude && this.pendingInterlude.cancel) this.pendingInterlude.cancel();
-  this.pendingInterlude = null;
-}
+    // If NOT fresh, optionally prewarm the next track
+    if (!freshNext && nextId) this._ensureTrack?.(nextId);
 
+    // cancel previous schedule
+    if (this.pendingInterlude?.cancel) this.pendingInterlude.cancel();
+
+    // 3) Start flicker
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const sG = this.ctx.createGain();
+    sG.gain.value = Math.max(0, interludeGain);
+    src.connect(sG);
+    sG.connect(this.master);
+
+    const tStart = Math.max(now + 0.01, now);
+    src.start(tStart);
+
+    let cancelled = false;
+    this.pendingInterlude = {
+      cancel: () => { cancelled = true; try { src.stop(); } catch { } }
+    };
+
+    // 4) Compute the exact time to switch (can be before the end)
+    const nominalEnd = tStart + buf.duration;
+    let scheduleAt = nominalEnd + postDelaySec;     // <-- key line
+
+    // Quantize (optional)
+    if (quantizeToBar && this.bpm) {
+      const spb = 60 / this.bpm;
+      const bar = spb * this.beatsPerBar;
+      const bars = Math.ceil(scheduleAt / bar);
+      scheduleAt = Math.max(scheduleAt, bars * bar);
+    }
+
+    // Clamp to "just after now" so we don't schedule in the past
+    scheduleAt = Math.max(scheduleAt, this.ctx.currentTime + 0.02);
+
+    // 5) Fire the switch exactly at scheduleAt (audio clock aligned)
+    const fire = async () => {
+      if (cancelled || !nextId) return;
+
+      // Fresh start: restart the next track at its loopStart at `scheduleAt`
+      const nextTrack = freshNext
+        ? this._restartTrackAt(nextId, scheduleAt)
+        : this._ensureTrack(nextId);
+
+      // Crossfade at `scheduleAt`
+      const gNext = nextTrack.gain.gain;
+      gNext.setValueAtTime(gNext.value, scheduleAt);
+      gNext.linearRampToValueAtTime(1, scheduleAt + crossfade);
+
+      if (this.current) {
+        const gCur = this.current.gain.gain;
+        gCur.setValueAtTime(gCur.value, scheduleAt);
+        gCur.linearRampToValueAtTime(0, scheduleAt + crossfade);
+      }
+
+      await this._playTransitionSfx(this.current?.id, nextId, scheduleAt);
+      this.current = { id: nextId, ...nextTrack };
+      this.pendingInterlude = null;
+    };
+
+    const ms = Math.max(0, (scheduleAt - this.ctx.currentTime) * 1000);
+    setTimeout(fire, ms);
+  }
 }
 
 // ---------- Asset maps (all using U()) ----------
@@ -449,9 +517,29 @@ export function bindScrollToClips() {
 
   let dropTimer = null;
   ScrollTrigger.create({
-    trigger: "#section-6", start: "top 60%",
-    onEnter: () => { dropTimer = gsap.delayedCall(6.1, () => safe("drop")); },
-    onEnterBack: () => { dropTimer = gsap.delayedCall(6.1, () => safe("drop")); },
+    trigger: "#section-6",
+    start: "top 60%",
+    onEnter: () => {
+      // play flicker, then hard-restart drop at loopStart when flicker ends
+      audioDir.playInterludeAndSwitch(U("../Assets/Flicker.mp3"), "drop", {
+        duckTo: 0,           // fully duck current music during flicker
+        interludeGain: 1.0,  // flicker loudness
+        crossfade: 8.28,     // fade time into drop
+        postDelaySec: -1.9,     // extra wait after flicker ends (optional)
+        quantizeToBar: false,
+        freshNext: true      // <- restart drop from the top
+      });
+    },
+    onEnterBack: () => {
+      audioDir.playInterludeAndSwitch(U("../Assets/Flicker.mp3"), "drop", {
+        duckTo: 0,
+        interludeGain: 1.0,
+        crossfade: 8.28,
+        postDelaySec: -5,
+        quantizeToBar: false,
+        freshNext: true
+      });
+    },
     onLeave: () => { if (dropTimer) { dropTimer.kill(); dropTimer = null; } },
     onLeaveBack: () => { if (dropTimer) { dropTimer.kill(); dropTimer = null; } },
   });

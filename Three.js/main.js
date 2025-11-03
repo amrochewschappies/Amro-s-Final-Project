@@ -141,33 +141,23 @@ gltfLoader.load(glbUrl, (gltf) => {
     section6RevealTL
       .add(() => {
         // Heading prep
-        gsap.set(s6Heading, { zIndex: 10000, opacity: 1 });
+        gsap.set(s6Heading, { zIndex: 10000, opacity: 0 });
         setTimeout(() => {
           s6Heading?.classList.add('s6-blink'); // optional blink
-        }, 1000);
+        }, 2000);
       })
       .to({}, { duration: 2.9 }) // hold on black while blinking
       .add(() => s6Heading?.classList.remove('s6-blink'))
+      .add(() => {
+        // Heading prep
+        gsap.set(s6Heading, { zIndex: 10000, opacity: 1 });
+      })
       .to({}, { duration: 0.3 }) // settle
       .add(() => {
         unlockBlackout();                 // was hideBlackout()
         if (s6InView) actions.forEach(a => a.paused = false);
         else { actions.forEach(a => { a.reset(); a.paused = true; }); mixer?.setTime(0); }
       })
-      .add(() => {
-        // Find the index of #section-6 and go to the next one using your existing logic
-        const sections = Array.from(document.querySelectorAll(".lock-section"));
-        const i = sections.findIndex(el => el.id === "section-6");
-        const next = sections[i + 1];
-        if (!next) return;
-
-        if (typeof window.goToSection === "function") {
-          window.goToSection(i + 1);         // ✅ uses your current snap/scroll logic
-        } else {
-          // Fallback if goToSection isn't global
-          next.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, "+=20.3") // small settle delay a
       .add(async () => {
         if (audioDir.current) {
           await audioDir._fadeMasterTo(0, 5.2);   // fade out over 1.2s
@@ -186,7 +176,8 @@ gltfLoader.load(glbUrl, (gltf) => {
         s6InView = true;
         actions.forEach(a => { a.enabled = true; a.reset(); a.paused = true; });
         mixer?.setTime(0);
-
+        rightCarLight.intensity = 0
+        leftCarLight.intensity = 0
         lockBlackout();            // was showBlackout()
         section6RevealTL.restart();
       },
@@ -194,12 +185,15 @@ gltfLoader.load(glbUrl, (gltf) => {
         s6InView = true;
         actions.forEach(a => { a.enabled = true; a.reset(); a.paused = true; });
         mixer?.setTime(0);
-
+        rightCarLight.intensity = 0
+        leftCarLight.intensity = 0
         lockBlackout();
         section6RevealTL.restart();
       },
       onLeave: () => {
         s6InView = false;
+        rightCarLight.intensity = 150
+        leftCarLight.intensity = 150
         actions.forEach(a => { a.reset(); a.paused = true; });
         mixer?.setTime(0);
         section6RevealTL.pause(0);
@@ -210,6 +204,8 @@ gltfLoader.load(glbUrl, (gltf) => {
       },
       onLeaveBack: () => {
         s6InView = false;
+        rightCarLight.intensity = 150
+        leftCarLight.intensity = 150
         actions.forEach(a => { a.reset(); a.paused = true; });
         mixer?.setTime(0);
         section6RevealTL.pause(0);
@@ -263,7 +259,8 @@ ScrollTrigger.create({
           crossfade: 0.25
         }
       );
-    }},
+    }
+  },
   onEnterBack: lockBlackout,
   onLeave: unlockBlackout,
   onLeaveBack: unlockBlackout,
@@ -428,6 +425,7 @@ gsap.to([leftCarLight, rightCarLight], {
   },
   intensity: 150,
 });
+
 
 // gsap.to(directionalLight, {
 //     scrollTrigger: {

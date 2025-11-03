@@ -3,11 +3,14 @@
 
 import { audioDir, bindScrollToClips } from "./audioController.js"; // adjust path
 
+const BASE =
+  (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) ||
+  '/Amro-s-Final-Project/';
 
 const navPages = [
-  { name: "Home", href: "/Rasha-Foundation/Home/homePage.html" },
-  { name: "Under The Hood", href: "/Rasha-Foundation/Our Work/work.html" },
-  { name: "Projects", href: "/Rasha-Foundation/Meet the team/ourTeamPage.html" },
+  { name: "Home", href: `${BASE}index.html` },
+  { name: "Under The Helmet", href: `${BASE}AboutMe/aboutMe.html` },
+  { name: "Projects", href: "/Rasha-Foundation/Meet%20the%20team/ourTeamPage.html" },
   { name: "Contact", href: "/Rasha-Foundation/Contact/contact.html" },
 ];
 
