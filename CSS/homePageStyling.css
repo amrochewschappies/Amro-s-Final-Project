@@ -217,17 +217,23 @@ h1 {
   align-items: center;
 }
 
+#projects-section { position: relative; }
+
 #number-plate {
+  position: absolute;
+  left: 40%;
+  top: 10%;
+  min-height: 70px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 220px;
   padding: 8px 16px;
   border-radius: 6px;
-  background: #f7f7f7;
+  background: #323232;
   color: #111;
-  border: 3px solid #3b82f6;        /* blue border */
-  box-shadow: inset 0 0 0 3px #fff;  /* white inset like a rim */
+  border: 3px solid #414142;        /* blue border */
+  box-shadow: inset 0 0 0 3px #363636;  /* white inset like a rim */
   letter-spacing: 1px;
   user-select: none;
   opacity: 1;                        /* used by gsap fade */
@@ -356,7 +362,8 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;      /* overridden by JS options */
+  padding-left: 10%;
+  width: 90%;      /* overridden by JS options */
   height: 400px;     /* overridden by JS options */
 }
 
@@ -364,7 +371,7 @@ h1 {
   position: absolute;
   width: 200px;
   aspect-ratio: 1;
-  border: 5px solid #fff;
+  border: 5px solid #373636;
   border-radius: 25px;
   overflow: hidden;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -376,4 +383,29 @@ h1 {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+
+.loader.speedo {
+  background: radial-gradient(120vmax 90vmax at 50% 120%, #0b0b0b 0%, #000 60%);
+  display: grid;
+  place-items: center;
+  color: #d9d9d9;
+}
+.dial {
+  width: min(520px, 90vw);
+  filter: drop-shadow(0 10px 25px rgba(0,0,0,.6));
+}
+.readout {
+  margin-top: -5vmin;
+  font: 700 clamp(18px,5vw,42px)/1 "Orbitron", system-ui, sans-serif;
+  letter-spacing: .06em;
+  color: #ff4545;
+  text-shadow: 0 0 18px rgba(255, 69, 69, .3);
+}
+.loader.speedo.exit {
+  animation: fadeUp .5s ease forwards;
+}
+@keyframes fadeUp {
+  to { opacity: 0; transform: translateY(-8px) scale(1.02); }
 }

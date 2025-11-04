@@ -524,7 +524,7 @@ export function bindScrollToClips() {
       audioDir.playInterludeAndSwitch(U("../Assets/Flicker.mp3"), "drop", {
         duckTo: 0,           // fully duck current music during flicker
         interludeGain: 1.0,  // flicker loudness
-        crossfade: 8.28,     // fade time into drop
+        crossfade: 0.28,     // fade time into drop
         postDelaySec: -1.9,     // extra wait after flicker ends (optional)
         quantizeToBar: false,
         freshNext: true      // <- restart drop from the top
@@ -534,8 +534,8 @@ export function bindScrollToClips() {
       audioDir.playInterludeAndSwitch(U("../Assets/Flicker.mp3"), "drop", {
         duckTo: 0,
         interludeGain: 1.0,
-        crossfade: 8.28,
-        postDelaySec: -5,
+        crossfade: 0.28,
+        postDelaySec: -1.9,
         quantizeToBar: false,
         freshNext: true
       });

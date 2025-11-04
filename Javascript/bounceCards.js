@@ -85,7 +85,6 @@ export function createBounceCards(container, opts = {}) {
     if (!plateEl) return;
     const next = (text || defaultPlateText).toString().toUpperCase().slice(0, 14);
     gsap.to(plateEl, {
-      opacity: 0,
       duration: 0.15,
       onComplete: () => {
         plateEl.textContent = next;

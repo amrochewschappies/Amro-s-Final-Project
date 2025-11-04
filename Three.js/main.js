@@ -10,6 +10,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import '../Javascript/IntertactiveAnimations.js'
 import { audioDir } from '../Javascript/audioController.js';
+import { mix } from 'three/tsl';
 
 
 
@@ -23,24 +24,43 @@ const blackoutEl = document.getElementById("blackout");
 const s6Heading = document.getElementById("section-6-heading");
 let s6InView = false;
 
+// ===== Speedometer loader helpers =====
+const ARC_LEN = 251; // must match the stroke-dasharray on #arc in the SVG
+
+function setLoaderProgress(p) {
+  const pct = Math.max(0, Math.min(100, p));
+  const arc    = document.getElementById('arc');
+  const needle = document.getElementById('needle');
+  const spd    = document.getElementById('spd');
+
+  if (arc)    arc.setAttribute('stroke-dashoffset', ARC_LEN * (1 - pct / 100));
+  if (needle) needle.setAttribute('transform', `rotate(${ -90 + (pct * 1.8) } 100 120)`); // -90..+90
+  if (spd)    spd.textContent = Math.round(pct);
+}
+
+function finishLoader() {
+  gsap.to("#loader", { autoAlpha: 0, duration: 0.5, onComplete: () => {
+    document.getElementById('loader')?.remove();
+  }});
+  gsap.to(".webgl", { autoAlpha: 1, duration: 0.5 });
+  ScrollTrigger.refresh();
+}
+
 
 const manager = new THREE.LoadingManager();
 
 manager.onStart = () => {
-  if (textEl) textEl.textContent = "0%";
-  if (barEl) barEl.style.width = "0%";
+  setLoaderProgress(0);
 };
 
-manager.onProgress = (url, loaded, total) => {
-  const pct = total ? Math.round((loaded / total) * 100) : 0;
-  if (textEl) textEl.textContent = `${pct}%`;
-  if (barEl) barEl.style.width = `${pct}%`;
+manager.onProgress = (_url, loaded, total) => {
+  const pct = total ? (loaded / total) * 100 : 0;
+  setLoaderProgress(pct);
 };
 
 manager.onLoad = () => {
-  gsap.to("#loader", { autoAlpha: 0, duration: 0.5, onComplete: () => loaderEl?.remove() });
-  gsap.to(".webgl", { autoAlpha: 1, duration: 0.5 });
-  ScrollTrigger.refresh();
+  setLoaderProgress(100);
+  finishLoader();
 };
 
 const scene = new THREE.Scene();
@@ -154,9 +174,13 @@ gltfLoader.load(glbUrl, (gltf) => {
       })
       .to({}, { duration: 0.3 }) // settle
       .add(() => {
-        unlockBlackout();                 // was hideBlackout()
+        // Timed fade out of this specific blackout
+        unlockBlackout("s6-intro");
         if (s6InView) actions.forEach(a => a.paused = false);
-        else { actions.forEach(a => { a.reset(); a.paused = true; }); mixer?.setTime(0); }
+        else {
+          actions.forEach(a => { a.reset(); a.paused = true; });
+          mixer?.setTime(0);
+        }
       })
       .add(async () => {
         if (audioDir.current) {
@@ -176,59 +200,71 @@ gltfLoader.load(glbUrl, (gltf) => {
         s6InView = true;
         actions.forEach(a => { a.enabled = true; a.reset(); a.paused = true; });
         mixer?.setTime(0);
-        rightCarLight.intensity = 0
-        leftCarLight.intensity = 0
-        lockBlackout();            // was showBlackout()
-        section6RevealTL.restart();
+        rightCarLight.intensity = 0;
+        leftCarLight.intensity = 0;
+
+        lockBlackout("s6-intro");            // 🔒 name this lock
+        section6RevealTL.restart(true);      // run reveal animation
       },
+
       onEnterBack: () => {
         s6InView = true;
         actions.forEach(a => { a.enabled = true; a.reset(); a.paused = true; });
         mixer?.setTime(0);
-        rightCarLight.intensity = 0
-        leftCarLight.intensity = 0
-        lockBlackout();
-        section6RevealTL.restart();
+        rightCarLight.intensity = 0;
+        leftCarLight.intensity = 0;
+
+        lockBlackout("s6-intro");
+        section6RevealTL.restart(true);
       },
+
       onLeave: () => {
         s6InView = false;
-        rightCarLight.intensity = 150
-        leftCarLight.intensity = 150
+        rightCarLight.intensity = 150;
+        leftCarLight.intensity = 150;
         actions.forEach(a => { a.reset(); a.paused = true; });
         mixer?.setTime(0);
+
+        unlockBlackout("s6-intro");          // 🔓 make sure it unlocks when leaving
         section6RevealTL.pause(0);
-        lockBlackout();
-        setTimeout(() => {
-          unlockBlackout();
-        }, 1000);
       },
+
       onLeaveBack: () => {
         s6InView = false;
-        rightCarLight.intensity = 150
-        leftCarLight.intensity = 150
+        rightCarLight.intensity = 150;
+        leftCarLight.intensity = 150;
         actions.forEach(a => { a.reset(); a.paused = true; });
         mixer?.setTime(0);
+
+        unlockBlackout("s6-intro");
         section6RevealTL.pause(0);
-        lockBlackout();
-        setTimeout(() => {
-          unlockBlackout();
-        }, 1000);
       }
     });
 
   }
 }, undefined, (err) => console.error("GLB load error:", err));
 
-let blackoutLocks = 0;
-function _applyBlackout() {
-  if (blackoutLocks > 0) blackoutEl?.classList.add('is-visible');
-  else blackoutEl?.classList.remove('is-visible');
-}
-function lockBlackout() { blackoutLocks++; _applyBlackout(); }
-function unlockBlackout() { blackoutLocks = Math.max(0, blackoutLocks - 1); _applyBlackout(); }
+// === NEW BLACKOUT CONTROL SYSTEM ===
+const blackoutLocks = new Set();
 
-function showBlackout() { blackoutEl?.classList.add('is-visible'); }
-function hideBlackout() { blackoutEl?.classList.remove('is-visible'); }
+function _applyBlackout() {
+  blackoutEl?.classList.toggle('is-visible', blackoutLocks.size > 0);
+}
+
+function lockBlackout(tag = 'anon') {
+  blackoutLocks.add(tag);
+  _applyBlackout();
+}
+
+function unlockBlackout(tag = 'anon') {
+  blackoutLocks.delete(tag);
+  _applyBlackout();
+}
+
+function clearAllBlackouts() {
+  blackoutLocks.clear();
+  _applyBlackout();
+}
 
 // Bridge 4→6
 let playedBlackout4_6 = false;
@@ -240,7 +276,7 @@ ScrollTrigger.create({
   end: "bottom top",
   // NO scrub here
   onEnter: () => {
-    lockBlackout();
+    lockBlackout("bridge-4-6");
 
     // fire only once per pass; remove the guard if you want it every time
     if (!playedBlackout4_6) {
@@ -261,9 +297,10 @@ ScrollTrigger.create({
       );
     }
   },
-  onEnterBack: lockBlackout,
-  onLeave: unlockBlackout,
-  onLeaveBack: unlockBlackout,
+  onEnterBack: () => lockBlackout("bridge-4-6"),
+  onLeave: () => unlockBlackout("bridge-4-6"),
+  onLeaveBack: () => unlockBlackout("bridge-4-6"),
+
   refreshPriority: 10, // ensure bridges register early
 });
 
@@ -272,10 +309,11 @@ ScrollTrigger.create({
   trigger: "#bridge-6-7",
   start: "top top",
   end: "bottom top",
-  onEnter: lockBlackout,
-  onEnterBack: lockBlackout,
-  onLeave: unlockBlackout,
-  onLeaveBack: unlockBlackout,
+  onEnter: () => lockBlackout("bridge-6-7"),
+  onEnterBack: () => lockBlackout("bridge-6-7"),
+  onLeave: () => unlockBlackout("bridge-6-7"),
+  onLeaveBack: () => unlockBlackout("bridge-6-7"),
+
   refreshPriority: 10,
 });
 
