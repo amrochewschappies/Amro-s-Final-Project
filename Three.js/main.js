@@ -15,7 +15,7 @@ import { mix } from 'three/tsl';
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
 // ---- Loop timing (tweak these) ----
-const CYCLE_SEC = 34;     // total cycle length (intro + play) in seconds
+const CYCLE_SEC = 27;     // total cycle length (intro + play) in seconds
 const INTRO_SEC = 2.2;    // blackout + flicker + reveal timeline duration
 const PLAY_SEC = Math.max(0, CYCLE_SEC - INTRO_SEC); // time animations run each loop
 
@@ -185,7 +185,10 @@ gltfLoader.load(glbUrl, (gltf) => {
       .add(() => {
         // heading prep + blink while black
         gsap.set(s6Heading, { zIndex: 10000, opacity: 0 });
-        s6Heading?.classList.add('s6-blink');
+        setTimeout(() => {
+          s6Heading?.classList.add('s6-blink');
+
+        }, 1700);
 
         // play flicker interlude during blackout, auto-switch to "drop"
         audioDir.playInterludeAndSwitch(FLICKER_URL, "drop", {

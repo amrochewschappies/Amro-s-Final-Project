@@ -493,4 +493,76 @@ h1 {
 }
 
 
-@media (min-width: 1300px) {}
+@media (min-width: 800px) and (max-width: 1400px) {
+  #section-4-text {
+    position: relative;
+    top: -181vh;
+    left: -15px;
+    transform:
+      translateZ(230px) 
+      rotateY(-71deg)
+       rotateZ(38.5deg)
+        rotateX(-19deg)
+         translateX(-67px);
+    transform-origin: center;
+    color: rgba(255, 255, 255, 0.167);
+  }
+
+  #section-4-container{
+    width: 68%;
+  }
+
+  #section-6-heading{
+    position: relative;
+    top: -11%;
+  }
+
+  #number-plate{
+    top: 17.5%;
+  }
+
+  .bounceCardsContainer {
+    margin-top: 2%;
+  }
+}
+
+
+
+@media (min-width: 400px) and (max-width: 800px) {
+  .reveals{
+    font-size: 8.5rem;
+    width: 100%;
+    left: 0;
+  }
+  
+  #section-4-text {
+    position: relative;
+    top: -181vh;
+    left: -15px;
+    transform:
+      translateZ(230px) 
+      rotateY(-71deg)
+       rotateZ(38.5deg)
+        rotateX(-19deg)
+         translateX(-67px);
+    transform-origin: center;
+    color: rgba(255, 255, 255, 0.167);
+  }
+
+  #section-4-container{
+    width: 68%;
+  }
+
+  #section-6-heading{
+    position: relative;
+    top: -11%;
+  }
+
+  #number-plate{
+    top: 17.5%;
+  }
+
+  .bounceCardsContainer {
+    margin-top: 2%;
+  }
+}
