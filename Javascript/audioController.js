@@ -234,6 +234,9 @@ class AudioDirector {
   async toggle({ startId }) {
     if (!this.ready || !this.current) {
       await this.start(startId);
+      if (this.userMuted) {
+        await this.play();
+      }
       return true;
     }
     if (this.isPaused) { await this.play(); return true; }
@@ -524,8 +527,8 @@ export function bindScrollToClips() {
       audioDir.playInterludeAndSwitch(U("../Assets/Flicker.mp3"), "drop", {
         duckTo: 0,           // fully duck current music during flicker
         interludeGain: 1.0,  // flicker loudness
-        crossfade: 0.28,     // fade time into drop
-        postDelaySec: -1.9,     // extra wait after flicker ends (optional)
+        crossfade: 2.28,     // fade time into drop
+        postDelaySec: 0,     // extra wait after flicker ends (optional)
         quantizeToBar: false,
         freshNext: true      // <- restart drop from the top
       });

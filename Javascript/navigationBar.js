@@ -10,8 +10,7 @@ const BASE =
 const navPages = [
   { name: "Home", href: `${BASE}index.html` },
   { name: "Under The Helmet", href: `${BASE}AboutMe/aboutMe.html` },
-  { name: "Projects", href: "/Rasha-Foundation/Meet%20the%20team/ourTeamPage.html" },
-  { name: "Contact", href: "/Rasha-Foundation/Contact/contact.html" },
+  { name: "Projects", href: `${BASE}index.html#projects-section` },
 ];
 
 
@@ -58,25 +57,42 @@ export function loadNavbar(CurrentPageName) {
   audioSVG.appendChild(path);
   audioBtn.appendChild(audioSVG);
 
- let scrollBound = false;
-const setWave = () => { path.setAttribute("d", WAVE); path.classList.add("wave-animate"); };
-const setStraight = () => { path.setAttribute("d", STRAIGHT); path.classList.remove("wave-animate"); };
+  let scrollBound = false;
+  const setWave = () => { path.setAttribute("d", WAVE); path.classList.add("wave-animate"); };
+  const setStraight = () => { path.setAttribute("d", STRAIGHT); path.classList.remove("wave-animate"); };
 
-audioBtn.addEventListener("click", async () => {
-  const playing = await audioDir.toggle({ startId: "intro" }); // play/pause with fades
-  if (playing) {
-    setWave();
-    if (!scrollBound) { bindScrollToClips(); scrollBound = true; }
-  } else {
-    setStraight();
+  audioBtn.addEventListener("click", async () => {
+    const playing = await audioDir.toggle({ startId: "intro" }); // play/pause with fades
+    if (playing) {
+      setWave();
+      if (!scrollBound) { bindScrollToClips(); scrollBound = true; }
+    } else {
+      setStraight();
+    }
+  });
+
+
+  const SECTION_OFFSETS = {
+    "#projects-section": -35, // <-- set your custom offset in px
+  };
+
+  // helper: smooth scroll with offset
+  function scrollToWithOffset(selector, offsetPx = 0) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.pageYOffset - offsetPx;
+    window.scrollTo({ top: y, behavior: "smooth" });
   }
-});
 
 
   // LET'S TALK button
   const talkBtn = document.createElement("button");
   talkBtn.classList.add("talk-btn");
   talkBtn.innerText = "LET'S TALK";
+
+  talkBtn.addEventListener("click", () => {
+    window.location.href = "mailto:amro4ahmed4@gmail.com?subject=Let's%20Talk&body=Hi%20Amro,";
+  });
 
   // MENU button
   const menuWrapper = document.createElement("div");
@@ -89,12 +105,27 @@ audioBtn.addEventListener("click", async () => {
   const menuContent = document.createElement("div");
   menuContent.classList.add("menu-content");
 
+  const isHome = () => /\/index\.html?$/.test(window.location.pathname);
+
   navPages.forEach((page) => {
     const link = document.createElement("a");
     link.setAttribute("href", page.href);
     link.innerText = page.name;
+
+    // If the link is the Projects section (hash) and we are already on Home,
+    // intercept and do smooth scroll with offset.
+    if (page.href.endsWith("#projects-section") && isHome()) {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        menuContent.classList.toggle("show");
+        const offset = SECTION_OFFSETS["#projects-section"] ?? 0;
+        scrollToWithOffset("#projects-section", offset);
+      });
+    }
+
     menuContent.appendChild(link);
   });
+
 
   menuBtn.addEventListener("click", () => {
     menuContent.classList.toggle("show");

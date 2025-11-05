@@ -94,8 +94,10 @@ h1 {
 .reveals {
   width: 59%;
   font-size: 500%;
-  transform: rotateX(72deg); /* steep tilt so it looks flat */
-  transform-origin: top center; /* pivot from the top */
+  transform: rotateX(72deg);
+  /* steep tilt so it looks flat */
+  transform-origin: top center;
+  /* pivot from the top */
   position: relative;
   left: 15vw;
   top: 18vh;
@@ -104,7 +106,8 @@ h1 {
 }
 
 .reveals-wrapper {
-  perspective: 800px; /* create the 3D space */
+  perspective: 800px;
+  /* create the 3D space */
 }
 
 .reveal {
@@ -113,7 +116,7 @@ h1 {
   width: 20%;
 }
 
-.body-text{
+.body-text {
   width: 23%;
 }
 
@@ -123,7 +126,7 @@ h1 {
   /* `both` keeps end state */
 }
 
-#section-1-container{
+#section-1-container {
   position: relative;
   top: 15%;
 }
@@ -177,76 +180,115 @@ h1 {
   }
 }
 
-.reveal{
+.reveal {
   font-size: 2rem;
   color: white;
 }
 
 
-#projects-section{
+#projects-section {
   margin-top: 90vh;
   height: auto;
 }
 
-#section-4{
+#section-4 {
   padding-top: 150vh;
 }
 
-#section-4-text{
+#section-4-text {
   position: relative;
   top: -180vh;
   left: 0;
-  transform: 
-    translateZ(230px)   
-    rotateY(-55deg)     
-    rotateZ(40.5deg)
-    rotateX(-19deg)
-    translateX(-67px); 
+  transform:
+    translateZ(230px) rotateY(-55deg) rotateZ(40.5deg) rotateX(-19deg) translateX(-67px);
   transform-origin: center;
   color: rgba(255, 255, 255, 0.167);
 }
 
 #section-4-container {
   position: relative;
-  perspective: 1200px; 
+  perspective: 1200px;
   transform-style: preserve-3d;
   width: 100%;
-  height: 100vh; 
+  height: 100vh;
   display: flex;
-  justify-content: flex-end; 
+  justify-content: flex-end;
   align-items: center;
 }
 
-#projects-section { position: relative; }
+#projects-section {
+  position: relative;
+}
 
 #number-plate {
   position: absolute;
-  left: 40%;
-  top: 10%;
+  left: 50%;
+  top: 9.5%;
+  transform: translateX(-50%);
   min-height: 70px;
+  min-width: 220px;
+  padding: 10px 20px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 220px;
-  padding: 8px 16px;
-  border-radius: 6px;
-  background: #323232;
-  color: #111;
-  border: 3px solid #414142;        /* blue border */
-  box-shadow: inset 0 0 0 3px #363636;  /* white inset like a rim */
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+
+  font-family: "Orbitron", sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  color: #888;
+  /* dark metallic grey */
+
+  background: linear-gradient(160deg, #1a1a1a 0%, #0f0f0f 80%);
+  border: 1.5px solid #2a2a2a;
+  border-radius: 10px;
+
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    inset 0 1px 3px rgba(255, 255, 255, 0.05),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.9);
+
+  /* faint reflection streak */
+  background-image:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
+    linear-gradient(0deg, #191919, #0f0f0f);
+
+  text-shadow:
+    0 0 3px rgba(0, 0, 0, 0.9),
+    0 1px 1px rgba(255, 255, 255, 0.05);
+
   user-select: none;
-  opacity: 1;                        /* used by gsap fade */
+  opacity: 0.9;
 }
 
+/* screw holes for realism */
+#number-plate::before,
+#number-plate::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #666, #111);
+}
 
-#carousel-section{
+#number-plate::before {
+  left: 12px;
+}
+
+#number-plate::after {
+  right: 12px;
+}
+
+#carousel-section {
   background-color: #d9d9d91d;
   height: 75vh;
   margin-top: 105vh;
 }
 
-#project-gallery{
+#project-gallery {
   height: 70vh;
   width: 98%;
   text-align: center;
@@ -257,11 +299,13 @@ h1 {
   align-items: flex-start;
 }
 
-#project-image{
+#project-image {
   width: 20%;
-  height: auto;        /* let the browser compute height from width */
-  display: block;      /* avoid inline-image baseline gap */
-  object-fit: contain; 
+  height: auto;
+  /* let the browser compute height from width */
+  display: block;
+  /* avoid inline-image baseline gap */
+  object-fit: contain;
 }
 
 .carousel-controls {
@@ -274,8 +318,8 @@ h1 {
 }
 
 .indicator {
-  background: #222;           
-  color: #656565;             
+  background: #222;
+  color: #656565;
   border: 2px solid #656565;
   border-radius: 20%;
   padding: 0.5rem 1rem;
@@ -283,37 +327,57 @@ h1 {
   font-size: 1.5rem;
 }
 
-#project-content{
+#project-content {
   width: 40vw;
-  color: rgba(255, 255, 255, 0.656); 
+  color: rgba(255, 255, 255, 0.656);
 }
 
 @keyframes flickerAnim {
-  0%   { background: #222; }
-  49%  { background: #222; }
-  50%  { background: #414141; }
-  100% { background: #414141; }
+  0% {
+    background: #222;
+  }
+
+  49% {
+    background: #222;
+  }
+
+  50% {
+    background: #414141;
+  }
+
+  100% {
+    background: #414141;
+  }
 }
 
 .indicator:hover {
   animation: flickerAnim 0.8s steps(1, end) infinite;
 }
 
-#blackout{
+#blackout {
   position: fixed;
   inset: 0;
   background: #000;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 6000ms ease; /* tweak as needed */
+  transition: opacity 6000ms ease;
+  /* tweak as needed */
   z-index: 9999;
   will-change: opacity;
 }
 
 
-#bridge-4-6 { height: 200vh; } /* adjust to taste */
+#bridge-4-6 {
+  height: 200vh;
+}
 
-#bridge-6-7 { height: 200vh; } /* adjust to taste */
+/* adjust to taste */
+
+#bridge-6-7 {
+  height: 200vh;
+}
+
+/* adjust to taste */
 
 #section-6-heading {
   z-index: 10000;
@@ -329,30 +393,39 @@ h1 {
   opacity: 1;
 }
 
-#blackout.is-visible{
+#blackout.is-visible {
   opacity: 1;
   pointer-events: auto;
   transition: all 700ms ease;
 }
 
 @keyframes s6Blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
+
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
 }
 
 
-#section-6-heading{
+#section-6-heading {
   font-size: 6rem;
   text-align: center;
   position: relative;
-  color: rgba(255, 255, 255, 0.216); 
-  mix-blend-mode: difference;  
+  color: rgba(255, 255, 255, 0.216);
+  mix-blend-mode: difference;
   opacity: 0;
 }
 
 
 .s6-blink {
-  animation: s6Blink 80ms steps(1) 30; /* ~30 blinks */
+  animation: s6Blink 80ms steps(1) 30;
+  /* ~30 blinks */
 }
 
 
@@ -363,8 +436,10 @@ h1 {
   justify-content: center;
   align-items: center;
   padding-left: 10%;
-  width: 90%;      /* overridden by JS options */
-  height: 400px;     /* overridden by JS options */
+  width: 90%;
+  /* overridden by JS options */
+  height: 400px;
+  /* overridden by JS options */
 }
 
 .bounce-card {
@@ -379,7 +454,7 @@ h1 {
   background-color: #000;
 }
 
-.bounce-card > img {
+.bounce-card>img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -392,20 +467,30 @@ h1 {
   place-items: center;
   color: #d9d9d9;
 }
+
 .dial {
   width: min(520px, 90vw);
-  filter: drop-shadow(0 10px 25px rgba(0,0,0,.6));
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, .6));
 }
+
 .readout {
   margin-top: -5vmin;
-  font: 700 clamp(18px,5vw,42px)/1 "Orbitron", system-ui, sans-serif;
+  font: 700 clamp(18px, 5vw, 42px)/1 "Orbitron", system-ui, sans-serif;
   letter-spacing: .06em;
   color: #ff4545;
   text-shadow: 0 0 18px rgba(255, 69, 69, .3);
 }
+
 .loader.speedo.exit {
   animation: fadeUp .5s ease forwards;
 }
+
 @keyframes fadeUp {
-  to { opacity: 0; transform: translateY(-8px) scale(1.02); }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(1.02);
+  }
 }
+
+
+@media (min-width: 1300px) {}
