@@ -172,6 +172,11 @@
         "MLUNGISI-GP",
       ]
 
+      const links =  [
+        "https://amrochewschappies.github.io/Amro-s-Ecommerce-Website/",
+        "https://amrochewschappies.github.io/Dragonfly-App/",
+        "https://smash-botato.example"
+      ]
       const transformStyles = [
         "rotate(5deg) translate(-150px)",
         "rotate(0deg) translate(-70px)",
@@ -183,6 +188,7 @@
       createBounceCards("#my-bouncecards", {
         images,
         labels,
+        links,
         containerWidth: 500,
         containerHeight: 250,
         animationDelay: 1,
@@ -190,6 +196,8 @@
         easeType: "elastic.out(1, 0.5)",
         transformStyles,
         enableHover: true,   // set to false to disable hover behavior
+        clickTarget: "_blank",   // or "_self" to stay in page
+        useAnchors: false
       });
     </script>
 

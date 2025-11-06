@@ -1,7 +1,6 @@
-// AudioDirector.js  — ESM-safe asset URLs
+// AudioDirector.js — ESM-safe asset URLs
 import { gsap } from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
-
 gsap.registerPlugin(ScrollTrigger);
 
 // Resolve a file path relative to THIS module (works with Vite/ESM)
@@ -14,11 +13,11 @@ class AudioDirector {
     transitionSfx = {},
     masterGain = 0.9,
     crossfadeSec = 0.28,
-    pauseFadeSec = 0.15, // now used as mute/unmute fade
+    pauseFadeSec = 0.15,
     sfxGain = 1.0,
     bpm = null,
     beatsPerBar = 4,
-    ambient = null
+    ambient = null,
   }) {
     this.clips = clips;
     this.defaultSfxUrl = defaultSfxUrl;
@@ -39,11 +38,8 @@ class AudioDirector {
     this.sfxBuffers = new Map();
     this.defaultSfxBuffer = null;
 
-    // ACTIVE music track "selection" (we won't stop sources anymore)
     this.current = null;
-
     this.userMuted = true;
-    // Treat "paused" as muted so transport keeps running
     this.isPaused = true;
     this.ready = false;
 
@@ -53,16 +49,15 @@ class AudioDirector {
     this.ambientGain = null;
     this.ambientEnabled = !!(ambient && (ambient.enabled ?? true));
 
-    // NEW: persistent tracks started once per clip, then gain-only control
     this.tracks = new Map(); // id -> { node, gain, loopStart, loopEnd, buffer }
-    this.transportStartTime = null; // shared start time for stable phase, when first track starts
+    this.transportStartTime = null;
   }
 
   async _ensureCtx() {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       this.master = this.ctx.createGain();
-      this.master.gain.value = 0; // start silent (muted)
+      this.master.gain.value = 0; // start silent
       this.master.connect(this.ctx.destination);
     }
     if (this.ctx.state !== "running") await this.ctx.resume();
@@ -95,7 +90,9 @@ class AudioDirector {
 
   async loadAll() {
     await this._ensureCtx();
-    const clipLoads = Object.entries(this.clips).map(([id, meta]) => this._loadClip(id, meta.url));
+    const clipLoads = Object.entries(this.clips).map(([id, meta]) =>
+      this._loadClip(id, meta.url)
+    );
     await Promise.all(clipLoads);
 
     if (this.defaultSfxUrl) {
@@ -105,11 +102,10 @@ class AudioDirector {
     await Promise.all(
       Object.values(this.transitionSfx)
         .filter(Boolean)
-        .map(url => this._loadSfx(url))
+        .map((url) => this._loadSfx(url))
     );
 
     await this._loadAmbient();
-
     this.ready = true;
   }
 
@@ -134,9 +130,8 @@ class AudioDirector {
     g.connect(this.master);
 
     // Start all tracks relative to one transport start time so phase is stable
-    const t0 = this.transportStartTime ?? (this.ctx.currentTime + 0.02);
+    const t0 = this.transportStartTime ?? this.ctx.currentTime + 0.02;
     if (!this.transportStartTime) this.transportStartTime = t0;
-
     node.start(t0, loopStart);
 
     const track = { node, gain: g, loopStart, loopEnd, buffer };
@@ -149,6 +144,7 @@ class AudioDirector {
     const node = this.ctx.createBufferSource();
     node.buffer = this.ambientBuffer;
     node.loop = true;
+
     const loopStart = this.ambientCfg.loopStart ?? 0;
     const loopEnd = this.ambientCfg.loopEnd ?? this.ambientBuffer.duration;
     node.loopStart = loopStart;
@@ -165,17 +161,18 @@ class AudioDirector {
     if (!this.ambientEnabled) return;
     if (!this.ambientBuffer) return;
     if (this.ambientNode) return;
+
     const a = this._makeAmbientNode();
     if (!a) return;
+
     const t = (this.transportStartTime ?? this.ctx.currentTime) + 0.02;
     a.node.start(t, this.ambientCfg.loopStart ?? 0);
     this.ambientNode = a.node;
     this.ambientGain = a.gain;
   }
 
-  // --- PUBLIC API (kept the same names, changed behavior to gain-only) ---
+  // --- PUBLIC API (gain-only crossfades, persistent nodes) ---
 
-  // Start = select a track, bring master up (unmute), fade target in, others out
   async start(id) {
     if (!this.ready) await this.loadAll();
     this._ensureAmbientStarted();
@@ -183,10 +180,6 @@ class AudioDirector {
     const t = this.ctx.currentTime;
     const next = this._ensureTrack(id);
 
-    // ⛔ remove the unconditional unmute
-    // await this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
-
-    // ✅ only raise master if user isn’t muted
     if (!this.userMuted) {
       await this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
     }
@@ -203,8 +196,6 @@ class AudioDirector {
     this.current = { id, ...next };
   }
 
-
-  // Stop = just fade all tracks down (do NOT stop sources)
   stop() {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
@@ -215,12 +206,11 @@ class AudioDirector {
     this.current = null;
   }
 
-  // Pause/Play become Mute/Unmute so transport keeps running
   async pause() {
     if (!this.ctx) return;
     this.userMuted = true;
     await this._fadeMasterTo(0, this.pauseFadeSec);
-    this.isPaused = true; // keep if you need it elsewhere
+    this.isPaused = true;
   }
 
   async play() {
@@ -234,24 +224,38 @@ class AudioDirector {
   async toggle({ startId }) {
     if (!this.ready || !this.current) {
       await this.start(startId);
-      if (this.userMuted) {
-        await this.play();
-      }
+      if (this.userMuted) await this.play();
       return true;
     }
-    if (this.isPaused) { await this.play(); return true; }
-    else { await this.pause(); return false; }
+    if (this.isPaused) {
+      await this.play();
+      return true;
+    } else {
+      await this.pause();
+      return false;
+    }
   }
 
+  // Inside class AudioDirector { ... }
 
-  // Switch = gain crossfade between already-running (or just-started) tracks
+  // helper you can call from outside if needed
+  cancelInterlude() {
+    if (this.pendingInterlude?.cancel) {
+      this.pendingInterlude.cancel();
+    }
+    this.pendingInterlude = null;
+  }
+
   async switchTo(id, { mask = true, quantizeToBar = false } = {}) {
     if (!this.ready) await this.loadAll();
+
+    // 🔑 cancel any scheduled interlude switch before doing anything else
+    this.cancelInterlude();
+
     if (!this.current) return this.start(id);
     if (id === this.current.id) return;
 
     let at = this.ctx.currentTime;
-
     if (quantizeToBar && this.bpm) {
       const secPerBeat = 60 / this.bpm;
       const barDur = secPerBeat * this.beatsPerBar;
@@ -263,7 +267,6 @@ class AudioDirector {
     const next = this._ensureTrack(id);
     const cur = this._ensureTrack(this.current.id);
 
-    // Gain-only crossfade (do NOT stop nodes)
     next.gain.gain.setValueAtTime(next.gain.gain.value, at);
     next.gain.gain.linearRampToValueAtTime(1, at + this.crossfadeSec);
 
@@ -271,9 +274,22 @@ class AudioDirector {
     cur.gain.gain.linearRampToValueAtTime(0, at + this.crossfadeSec);
 
     if (mask) await this._playTransitionSfx(this.current.id, id, at);
-
     this.current = { id, ...next };
   }
+
+  stop() {
+    if (!this.ctx) return;
+    // also cancel when stopping everything
+    this.cancelInterlude();
+
+    const t = this.ctx.currentTime;
+    for (const { gain } of this.tracks.values()) {
+      gain.gain.setValueAtTime(gain.gain.value, t);
+      gain.gain.linearRampToValueAtTime(0, t + this.crossfadeSec);
+    }
+    this.current = null;
+  }
+
 
   async _playTransitionSfx(fromId, toId, at) {
     let url = this.transitionSfx[`${fromId}->${toId}`];
@@ -282,7 +298,7 @@ class AudioDirector {
     let buf = null;
     if (url) {
       buf = this.sfxBuffers.get(url);
-      if (!buf) { buf = await this._loadSfx(url); }
+      if (!buf) buf = await this._loadSfx(url);
     } else {
       buf = this.defaultSfxBuffer;
       if (!buf && this.defaultSfxUrl) {
@@ -308,7 +324,7 @@ class AudioDirector {
     const g = this.master.gain;
     try { g.setValueAtTime(g.value, t0); } catch { }
     g.linearRampToValueAtTime(target, t0 + dur);
-    await new Promise(r => setTimeout(r, dur * 1000));
+    await new Promise((r) => setTimeout(r, dur * 1000));
   }
 
   async playOneShot(url, { gain = 1.0, at = null } = {}) {
@@ -335,7 +351,6 @@ class AudioDirector {
     const loopStart = meta.loopStart ?? 0;
     const loopEnd = meta.loopEnd ?? buffer.duration;
 
-    // reuse existing gain if present; otherwise create one
     let tr = this.tracks.get(id);
     if (!tr) {
       const g = this.ctx.createGain();
@@ -343,7 +358,6 @@ class AudioDirector {
       g.connect(this.master);
       tr = { gain: g, loopStart, loopEnd, buffer };
     } else {
-      // stop and disconnect the old source so we can “restart” phase
       try { tr.node.stop(at); } catch { }
       try { tr.node.disconnect(); } catch { }
       tr.loopStart = loopStart;
@@ -366,18 +380,21 @@ class AudioDirector {
     return tr;
   }
 
-
   // ---- Interlude during blackout (duck -> one-shot -> switch) ----
-  pendingInterlude = null; // class field (declare near other fields)
+  pendingInterlude = null;
 
-  async playInterludeAndSwitch(url, nextId, {
-    duckTo = 0,
-    interludeGain = 1.0,
-    crossfade = this.crossfadeSec,
-    postDelaySec = 0,      // can be negative to start before flicker ends
-    quantizeToBar = false,
-    freshNext = true
-  } = {}) {
+  async playInterludeAndSwitch(
+    url,
+    nextId,
+    {
+      duckTo = 0,
+      interludeGain = 1.0,
+      crossfade = this.crossfadeSec,
+      postDelaySec = 0,
+      quantizeToBar = false,
+      freshNext = true,
+    } = {}
+  ) {
     if (!this.ready) await this.loadAll();
 
     const now = this.ctx.currentTime;
@@ -393,13 +410,13 @@ class AudioDirector {
     const buf = await this._loadSfx(url);
     if (!buf) return;
 
-    // If NOT fresh, optionally prewarm the next track
+    // optionally prewarm next track
     if (!freshNext && nextId) this._ensureTrack?.(nextId);
 
-    // cancel previous schedule
+    // cancel previous interlude
     if (this.pendingInterlude?.cancel) this.pendingInterlude.cancel();
 
-    // 3) Start flicker
+    // 3) Start flicker (one-shot)
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
     const sG = this.ctx.createGain();
@@ -411,15 +428,11 @@ class AudioDirector {
     src.start(tStart);
 
     let cancelled = false;
-    this.pendingInterlude = {
-      cancel: () => { cancelled = true; try { src.stop(); } catch { } }
-    };
 
-    // 4) Compute the exact time to switch (can be before the end)
+    // 4) Compute exact switch time
     const nominalEnd = tStart + buf.duration;
-    let scheduleAt = nominalEnd + postDelaySec;     // <-- key line
+    let scheduleAt = nominalEnd + postDelaySec;
 
-    // Quantize (optional)
     if (quantizeToBar && this.bpm) {
       const spb = 60 / this.bpm;
       const bar = spb * this.beatsPerBar;
@@ -427,19 +440,35 @@ class AudioDirector {
       scheduleAt = Math.max(scheduleAt, bars * bar);
     }
 
-    // Clamp to "just after now" so we don't schedule in the past
     scheduleAt = Math.max(scheduleAt, this.ctx.currentTime + 0.02);
 
-    // 5) Fire the switch exactly at scheduleAt (audio clock aligned)
+    // 5) Fire the switch exactly at scheduleAt
     const fire = async () => {
       if (cancelled || !nextId) return;
 
-      // Fresh start: restart the next track at its loopStart at `scheduleAt`
+      // SAME-ID restart (e.g., back to "drop" again)
+      if (this.current?.id === nextId) {
+        const restarted = this._restartTrackAt(nextId, scheduleAt);
+
+        const g = restarted.gain.gain;
+        g.setValueAtTime(g.value, scheduleAt);
+        g.linearRampToValueAtTime(1, scheduleAt + crossfade);
+
+        if (!this.userMuted) {
+          this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
+        }
+
+        await this._playTransitionSfx(nextId, nextId, scheduleAt);
+        this.current = { id: nextId, ...restarted };
+        this.pendingInterlude = null;
+        return;
+      }
+
+      // Different track: normal crossfade
       const nextTrack = freshNext
         ? this._restartTrackAt(nextId, scheduleAt)
         : this._ensureTrack(nextId);
 
-      // Crossfade at `scheduleAt`
       const gNext = nextTrack.gain.gain;
       gNext.setValueAtTime(gNext.value, scheduleAt);
       gNext.linearRampToValueAtTime(1, scheduleAt + crossfade);
@@ -450,21 +479,36 @@ class AudioDirector {
         gCur.linearRampToValueAtTime(0, scheduleAt + crossfade);
       }
 
+      if (!this.userMuted) {
+        this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
+      }
+
       await this._playTransitionSfx(this.current?.id, nextId, scheduleAt);
       this.current = { id: nextId, ...nextTrack };
       this.pendingInterlude = null;
     };
 
+    // schedule the switch
     const ms = Math.max(0, (scheduleAt - this.ctx.currentTime) * 1000);
-    setTimeout(fire, ms);
+    const timer = setTimeout(fire, ms);
+
+    // upgrade cancel() to clear timer & stop the one-shot
+    this.pendingInterlude = {
+      cancel: () => {
+        cancelled = true;
+        try { src.stop(); } catch { }
+        try { clearTimeout(timer); } catch { }
+      },
+    };
   }
 }
 
-// ---------- Asset maps (all using U()) ----------
+// ---------- Asset maps ----------
 const CLIPS = {
   intro: { url: U("../Assets/First Part.mp3") },
   verse: { url: U("../Assets/Second Part.mp3") },
   drop: { url: U("../Assets/Car_Audio_V1.mp3") },
+  project: { url: U("../Assets/Projects Audio.mp3") }
 };
 
 const DEFAULT_SFX = U("../Assets/whoosh.mp3");
@@ -472,6 +516,8 @@ const DEFAULT_SFX = U("../Assets/whoosh.mp3");
 const TRANSITION_SFX = {
   "intro->verse": U("../Assets/whoosh.mp3"),
   "verse->drop": U("../Assets/whoosh.mp3"),
+  "drop->project": U("../Assets/whoosh.mp3"),
+
 };
 
 const AMBIENT = {
@@ -488,34 +534,51 @@ export const audioDir = new AudioDirector({
   transitionSfx: TRANSITION_SFX,
   masterGain: 0.9,
   crossfadeSec: 0.28,
-  pauseFadeSec: 0.35, // mute/unmute fade
+  pauseFadeSec: 0.35,
   sfxGain: 1.0,
   bpm: null,
   beatsPerBar: 4,
   ambient: AMBIENT,
 });
 
-// ---------- GSAP Scroll bindings ----------
+// ---------- Scroll bindings ----------
 let _scrollBound = false;
 export function bindScrollToClips() {
   if (_scrollBound) return;
   _scrollBound = true;
 
-  // keep your existing triggers — we only change volume/gain inside
   const safe = (id) => {
-    // Always select the correct clip. If muted, the crossfade happens under master=0.
+    // Select the clip; if userMuted, crossfade happens under master=0
     audioDir.switchTo(id, { mask: true, quantizeToBar: false });
   };
 
   ScrollTrigger.create({
-    trigger: "#hero", start: "top top", end: "bottom top",
+    trigger: "#hero",
+    start: "top top",
+    end: "bottom top",
     onEnter: () => safe("intro"),
-    onEnterBack: () => safe("intro")
+    onEnterBack: () => safe("intro"),
   });
 
   ScrollTrigger.create({
-    trigger: "#section-3", start: "top 60%",
-    onEnter: () => safe("verse")
+    trigger: "#section-3",
+    start: "top 60%",
+    onEnter: () => safe("verse"),
+    onEnterBack: () => safe("verse"),
+  });
+
+  ScrollTrigger.create({
+    trigger: "#section-4",
+    start: "top 60%",
+    onEnterBack: () => safe("verse"),
+  });
+
+  ScrollTrigger.create({
+    trigger: "#projects-section",
+    start: "top 100%",
+    once: true,
+    onEnter: () => safe("project"),
+    onEnterBack: () => safe("project"),
   });
 
   let dropTimer = null;
@@ -525,13 +588,14 @@ export function bindScrollToClips() {
     onEnter: () => {
       // play flicker, then hard-restart drop at loopStart when flicker ends
       audioDir.playInterludeAndSwitch(U("../Assets/Flicker.mp3"), "drop", {
-        duckTo: 0,           // fully duck current music during flicker
-        interludeGain: 1.0,  // flicker loudness
-        crossfade: 2.28,     // fade time into drop
-        postDelaySec: 0,     // extra wait after flicker ends (optional)
+        duckTo: 0,
+        interludeGain: 1.0,
+        crossfade: 2.28,
+        postDelaySec: 0,
         quantizeToBar: false,
-        freshNext: true      // <- restart drop from the top
-      });
+        freshNext: true,
+      }
+      );
     },
     onEnterBack: () => {
       audioDir.playInterludeAndSwitch(U("../Assets/Flicker.mp3"), "drop", {
@@ -540,17 +604,36 @@ export function bindScrollToClips() {
         crossfade: 0.28,
         postDelaySec: -1.9,
         quantizeToBar: false,
-        freshNext: true
+        freshNext: true,
       });
     },
-    onLeave: () => { if (dropTimer) { dropTimer.kill(); dropTimer = null; } },
-    onLeaveBack: () => { if (dropTimer) { dropTimer.kill(); dropTimer = null; } },
+    onLeave: () => { if (dropTimer) { dropTimer.kill(); dropTimer = null; audioDir.cancelInterlude() } },
+    onLeaveBack: () => { if (dropTimer) { dropTimer.kill(); dropTimer = null; audioDir.cancelInterlude() } },
   });
+  
+  // Put this near your other ScrollTriggers
+  let vroomReady = true;
+
+  const fireVroom = () => {
+    if (!vroomReady) return;
+    vroomReady = false;
+    audioDir.playOneShot(U("../Assets/Vroom.mp3"), { gain: 3.9 });
+  };
 
   ScrollTrigger.create({
-    trigger: "#section-1", start: "top 100%", once: true,
-    onEnter: () => audioDir.playOneShot(U("../Assets/Vroom.mp3"), { gain: 3.9 })
+    trigger: "#section-1",
+    start: "top 100%",
+    // IMPORTANT: remove once:true so it can run again later
+    onEnter: (self) => {
+      // only when scrolling DOWN into the trigger
+      if (self.direction === 1) fireVroom();
+    },
+    // when you scroll back above the trigger, re-arm it
+    onLeaveBack: () => { vroomReady = true; },
   });
 
-  window.addEventListener("load", () => setTimeout(() => ScrollTrigger.refresh(), 0));
+
+  window.addEventListener("load", () =>
+    setTimeout(() => ScrollTrigger.refresh(), 0)
+  );
 }

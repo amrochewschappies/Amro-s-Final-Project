@@ -15,8 +15,8 @@ import { mix } from 'three/tsl';
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
 // ---- Loop timing (tweak these) ----
-const CYCLE_SEC = 27;     // total cycle length (intro + play) in seconds
-const INTRO_SEC = 2.2;    // blackout + flicker + reveal timeline duration
+const CYCLE_SEC = 26;     // total cycle length (intro + play) in seconds
+const INTRO_SEC = 3.2;    // blackout + flicker + reveal timeline duration
 const PLAY_SEC = Math.max(0, CYCLE_SEC - INTRO_SEC); // time animations run each loop
 
 const loaderEl = document.getElementById("loader");
@@ -169,6 +169,7 @@ gltfLoader.load(glbUrl, (gltf) => {
       cancelNextCycle();
       // After animations play for PLAY_SEC, go back to blackout→flicker→reveal
       cycleDC = gsap.delayedCall(PLAY_SEC, () => {
+        
         if (!s6InView) return;          // don't loop when off-screen
         pauseAll();                     // freeze before blackout
         rightCarLight.intensity = 0;
@@ -213,7 +214,7 @@ gltfLoader.load(glbUrl, (gltf) => {
           setTimeout(() => {
             playFromStart();
             scheduleNextCycle();      // start the play window timer
-          }, 2100);
+          }, 2000);
         } else {
           actions.forEach(a => { a.reset(); a.paused = true; });
           mixer?.setTime(0);
