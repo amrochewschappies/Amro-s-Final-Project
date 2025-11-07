@@ -69,14 +69,19 @@ loader.load(
                 if (action && !hasStarted) {
                     hasStarted = true;
                     action.reset();
-                    action.paused = false; // unpause
+                    action.paused = false;
                     action.play();
-                    document.querySelector('.about-overlay').classList.add('visible');
+                    document.querySelector('.about-overlay').classList.add('visible'); // triggers fade-in
                 }
+            }, ANIM_DELAY_MS);
+        } else {
+            // No animations: still fade in after the same delay
+            setTimeout(() => {
+                document.querySelector('.about-overlay').classList.add('visible');
             }, ANIM_DELAY_MS);
         }
     },
-    (xhr) => console.log((xhr.loaded / xhr.total * 100) + '% loaded'),
+    undefined,
     (error) => console.error('Error loading GLTF:', error)
 );
 

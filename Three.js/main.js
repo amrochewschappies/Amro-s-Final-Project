@@ -71,6 +71,13 @@ const camera = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 0.1, 
 camera.position.z = 32;
 camera.position.y = -2;
 camera.position.x = 0.05;
+
+if (window.innerWidth) {
+  camera.position.z = 42;
+  camera.position.y = -2;
+  camera.position.x = 6.05;
+}
+
 scene.add(camera);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0);
@@ -95,7 +102,7 @@ scene.add(rightCarLight)
 const canvas = document.querySelector(".webgl");
 
 const renderer = new THREE.WebGLRenderer({ canvas });
-renderer.setSize(sizes.width, sizes.height);
+renderer.setSize(sizes.width, sizes.height, false);
 renderer.setClearColor(0x000000);
 renderer.domElement.style.opacity = 0;
 
@@ -169,7 +176,7 @@ gltfLoader.load(glbUrl, (gltf) => {
       cancelNextCycle();
       // After animations play for PLAY_SEC, go back to blackout→flicker→reveal
       cycleDC = gsap.delayedCall(PLAY_SEC, () => {
-        
+
         if (!s6InView) return;          // don't loop when off-screen
         pauseAll();                     // freeze before blackout
         rightCarLight.intensity = 0;
@@ -234,6 +241,27 @@ gltfLoader.load(glbUrl, (gltf) => {
         leftCarLight.intensity = 0;
 
         lockBlackout("s6-intro");
+
+        if (window.innerWidth < 600) {
+
+          scene.fog = new THREE.FogExp2(0x808080, 0.0010)
+          gsap.to(camera.position, {
+            x: -100,
+            y: 7,
+            z: -99,
+            duration: 2,
+            ease: "power2.inOut"
+          });
+
+          gsap.to(camera.rotation, {
+            x: -0.1,
+            y: -2.35,
+            z: 0,
+            duration: 2,
+            ease: "power2.inOut"
+          });
+        }
+
         section6RevealTL.restart(true); // runs intro → play → schedule
       },
 
@@ -244,6 +272,26 @@ gltfLoader.load(glbUrl, (gltf) => {
         leftCarLight.intensity = 0;
 
         lockBlackout("s6-intro");
+
+        if (window.innerWidth < 600) {
+
+          scene.fog = new THREE.FogExp2(0x808080, 0.0010)
+          gsap.to(camera.position, {
+            x: -100,
+            y: 7,
+            z: -99,
+            duration: 2,
+            ease: "power2.inOut"
+          });
+
+          gsap.to(camera.rotation, {
+            x: -0.1,
+            y: -2.35,
+            z: 0,
+            duration: 2,
+            ease: "power2.inOut"
+          });
+        }
         section6RevealTL.restart(true);
       },
 
@@ -447,32 +495,13 @@ gsap.to([leftCarLight, rightCarLight], {
   scrollTrigger: {
     trigger: "#section-1",
     start: "top bottom",
-    end: "centre top",
+    end: "center bottom",
     scrub: true,
   },
   intensity: 150,
   onUpdate: syncHeadlightGlow // keep synced while scrubbing
 });
 
-gsap.to(camera.position, {
-  scrollTrigger: {
-    trigger: "#section-3",
-    start: "top center",
-    end: "bottom center",
-    scrub: true,
-  },
-  z: 48,
-});
-
-gsap.to(directionalLight, {
-  scrollTrigger: {
-    trigger: "#section-4",
-    start: "top center",
-    end: "bottom center",
-    scrub: true,
-  },
-  intensity: 0.4,
-});
 
 let section4_tl = gsap.timeline({
   scrollTrigger: {
@@ -484,15 +513,6 @@ let section4_tl = gsap.timeline({
   }
 });
 
-section4_tl.to(camera.position, {
-  x: -58,
-  y: -2,
-  z: -45
-}).to(camera.rotation, {
-  x: -0.24234443,
-  y: -2.19294443,
-  z: -0.201213
-}, 0);
 
 let projects_tl = gsap.timeline({
   scrollTrigger: {
@@ -505,18 +525,96 @@ let projects_tl = gsap.timeline({
   }
 });
 
-projects_tl.to(camera.position, {
-  x: -0.2,
-  y: -5.5,
-  z: -35,
-  ease: "none"
-})
-  .to(camera.rotation, {
-    x: 0,
-    y: -3.14,
-    z: 0,
-    ease: "none"
-  }, "<");
+
+ScrollTrigger.matchMedia({
+  // Small phones (<400px)
+  "(max-width: 599px)": function () {
+    gsap.to(camera.position, {
+      scrollTrigger: {
+        trigger: "#section-3",
+        start: "top top", 
+        end: "bottom center",
+        scrub: true,
+      },
+      z: 70,
+      x: 0.05,
+      overwrite: "auto"
+    });
+
+    section4_tl.to(camera.position, {
+      x: -118,
+      y: -2,
+      z: 85
+    }).to(camera.rotation, {
+      x: -0.24234443,
+      y: -2.19294443,
+      z: -0.201213
+    }, 0);
+
+    projects_tl.to(camera.position, {
+      x: -0.2,
+      y: -5.5,
+      z: -85,
+      ease: "none"
+    })
+      .to(camera.rotation, {
+        x: 0,
+        y: -3.14,
+        z: 0,
+        ease: "none"
+      }, "<");
+  },
+
+  // Medium devices (400px–767px)
+  "(min-width: 600px) and (max-width: 2767px)": function () {
+    gsap.to(camera.position, {
+      scrollTrigger: {
+        trigger: "#section-3",
+        start: "top center",
+        end: "bottom center",
+        scrub: true,
+      },
+      z: 48,
+    });
+    section4_tl.to(camera.position, {
+      x: -58,
+      y: -2,
+      z: -45
+    }).to(camera.rotation, {
+      x: -0.24234443,
+      y: -2.19294443,
+      z: -0.201213
+    }, 0);
+
+
+    projects_tl.to(camera.position, {
+      x: -0.2,
+      y: -5.5,
+      z: -35,
+      ease: "none"
+    })
+      .to(camera.rotation, {
+        x: 0,
+        y: -3.14,
+        z: 0,
+        ease: "none"
+      }, "<");
+  },
+});
+
+
+gsap.to(directionalLight, {
+  scrollTrigger: {
+    trigger: "#section-4",
+    start: "top center",
+    end: "bottom center",
+    scrub: true,
+  },
+  intensity: 0.4,
+});
+
+
+
 
 projects_tl.to(directionalLight.position, {
   x: -20,
@@ -526,6 +624,8 @@ projects_tl.to(directionalLight.position, {
 
 // ===== Animate/render
 const clock = new THREE.Clock();
+
+ScrollTrigger.refresh();
 
 function animate() {
   requestAnimationFrame(animate);
@@ -541,7 +641,7 @@ function animate() {
 animate();
 
 window.addEventListener('resize', () => {
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 });
