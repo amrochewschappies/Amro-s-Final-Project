@@ -138,10 +138,12 @@ gltfLoader.setDRACOLoader(draco);
 let mixer;
 let actions = [];
 
+const P = (p) => `${import.meta.env.BASE_URL}${p}`;
+
 const glbUrl = new URL('../Assets/Compressed Test1.glb', import.meta.url).href;
 const hdrUrl = new URL('../Assets/DarkStorm4K.hdr', import.meta.url).href;
 const imgUrl = new URL('../Assets/Car Light.png', import.meta.url).href;
-const FLICKER_URL = new URL("../Assets/Flicker.mp3", import.meta.url).toString();
+const FLICKER_URL = P('audio/Flicker.mp3');
 
 gltfLoader.load(glbUrl, (gltf) => {
   gltf.scene.scale.set(2, 2, 2);

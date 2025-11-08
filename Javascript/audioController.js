@@ -4,7 +4,7 @@ import ScrollTrigger from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 // Resolve a file path relative to THIS module (works with Vite/ESM)
-const U = (rel) => new URL(rel, import.meta.url).toString();
+const U = (rel) => `${import.meta.env.BASE_URL}${rel}`;
 
 class AudioDirector {
   constructor({
@@ -505,23 +505,23 @@ class AudioDirector {
 
 // ---------- Asset maps ----------
 const CLIPS = {
-  intro: { url: U("../Assets/FirstPart.mp3") },
-  verse: { url: U("../Assets/SecondPart.mp3") },
-  drop: { url: U("../Assets/CarAudio.mp3") },
-  project: { url: U("../Assets/ProjectsAudio.mp3") }
+  intro: { url: U("audio/FirstPart.mp3") },
+  verse: { url: U("audio/SecondPart.mp3") },
+  drop: { url: U("audio/CarAudio.mp3") },
+  project: { url: U("audio/ProjectsAudio.mp3") }
 };
 
-const DEFAULT_SFX = U("../Assets/whoosh.mp3");
+const DEFAULT_SFX = U("audio/whoosh.mp3");
 
 const TRANSITION_SFX = {
-  "intro->verse": U("../Assets/whoosh.mp3"),
-  "verse->drop": U("../Assets/whoosh.mp3"),
-  "drop->project": U("../Assets/whoosh.mp3"),
+  "intro->verse": U("audio/whoosh.mp3"),
+  "verse->drop": U("audio/whoosh.mp3"),
+  "drop->project": U("audio/whoosh.mp3"),
 
 };
 
 const AMBIENT = {
-  url: U("../Assets/RainBackgroundAudio.mp3"),
+  url: U("audio/RainBackgroundAudio.mp3"),
   loopStart: 0,
   gain: 0.25,
   enabled: true,
@@ -595,7 +595,7 @@ export function bindScrollToClips() {
     start: "top 60%",
     onEnter: () => {
       // play flicker, then hard-restart drop at loopStart when flicker ends
-      audioDir.playInterludeAndSwitch(U("../Assets/Flicker.mp3"), "drop", {
+      audioDir.playInterludeAndSwitch(U("audio/Flicker.mp3"), "drop", {
         duckTo: 0,
         interludeGain: 1.0,
         crossfade: 2.28,
@@ -606,7 +606,7 @@ export function bindScrollToClips() {
       );
     },
     onEnterBack: () => {
-      audioDir.playInterludeAndSwitch(U("../Assets/Flicker.mp3"), "drop", {
+      audioDir.playInterludeAndSwitch(U("audio/Flicker.mp3"), "drop", {
         duckTo: 0,
         interludeGain: 1.0,
         crossfade: 0.28,
@@ -625,7 +625,7 @@ export function bindScrollToClips() {
   const fireVroom = () => {
     if (!vroomReady) return;
     vroomReady = false;
-    audioDir.playOneShot(U("../Assets/Vroom.mp3"), { gain: 3.9 });
+    audioDir.playOneShot(U("audio/Vroom.mp3"), { gain: 3.9 });
   };
 
   ScrollTrigger.create({
