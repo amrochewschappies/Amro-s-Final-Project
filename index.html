@@ -4,18 +4,14 @@
 <head>
   <meta charset="utf-8" />
   <title>Amro Ahmed</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./styling.css" />
-  <link rel="stylesheet" href="./CSS/navigationBarStyling.css" />
-  <link rel="stylesheet" href="./CSS/homePageStyling.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
 
-  <script type="module">
-    import { loadNavbar } from "./Javascript/navigationBar.js";
-    loadNavbar("Home");
-  </script>
-
-  <!-- If these files do NOT use import/export, keep them as plain scripts -->
-  <script type="module" src="./Javascript/audioController.js" defer></script>
+  <!-- If these files do NOT use import/export, keep them as plain scripts -->
+  <script type="module" crossorigin src="/Amro-s-Final-Project/assets/index-B3mhRBSg.js"></script>
+  <link rel="modulepreload" crossorigin href="/Amro-s-Final-Project/assets/GLTFLoader-B2nzljLs.js">
+  <link rel="stylesheet" crossorigin href="/Amro-s-Final-Project/assets/GLTFLoader-BYZWRib-.css">
+  <link rel="stylesheet" crossorigin href="/Amro-s-Final-Project/assets/index-8hY918PE.css">
 </head>
 
 
@@ -155,61 +151,9 @@
       <div id="my-bouncecards" class="bounceCardsContainer"></div>
     </section>
 
+
 
-    <script type="module">
-      import { createBounceCards } from "./Javascript/bounceCards.js";
-
-      // Resolve asset URLs relative to THIS HTML module (Vite will fingerprint + rewrite)
-      const R = (p) => new URL(p, import.meta.url).toString();
-
-      // If you renamed to no-spaces (recommended), use these:
-      // const images = [
-      //   R("./Assets/ferrari-background.png"),
-      //   R("./Assets/groveeee-image.png"),
-      //   R("./Assets/mlungisi-logo.png"),
-      // ];
-
-      // If you kept your current filenames with spaces, this still works:
-      const images = [
-        R("./Assets/FerrariBackground.png"),
-        R("./Assets/GroveeeeImage.png"),
-        R("./Assets/MlungisiLogo.png"),
-      ];
-
-      const labels = ["FERRARI-GP", "GROVEEEE-GP", "MLUNGISI-GP"];
-
-      const links = [
-        "https://amrochewschappies.github.io/Amro-s-Ecommerce-Website/",
-        "https://amrochewschappies.github.io/Dragonfly-App/",
-        "https://smash-botato.example"
-      ];
-
-      const transformStyles = [
-        "rotate(5deg) translate(-150px)",
-        "rotate(0deg) translate(-70px)",
-        "rotate(-5deg)",
-        "rotate(5deg) translate(70px)",
-        "rotate(-5deg) translate(150px)",
-      ];
-
-      createBounceCards("#my-bouncecards", {
-        images,
-        labels,
-        links,
-        containerWidth: 500,
-        containerHeight: 250,
-        animationDelay: 1,
-        animationStagger: 0.08,
-        easeType: "elastic.out(1, 0.5)",
-        transformStyles,
-        enableHover: true,
-        clickTarget: "_blank",
-        useAnchors: false
-      });
-    </script>
-
-    <!-- leave this as-is; Vite will rewrite it on build -->
-    <script type="module" src="./Three.js/main.js"></script>
+    <!-- leave this as-is; Vite will rewrite it on build -->
 
     <section>
       <p>created by Amro
