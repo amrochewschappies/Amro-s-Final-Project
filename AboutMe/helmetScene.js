@@ -36,8 +36,10 @@ let mixer = null;
 let action = null;
 let hasStarted = false;
 
+const MODEL_URL = new URL("./helmet-model.glb", import.meta.url).toString();
+
 loader.load(
-    './Helmet Model.glb',
+    MODEL_URL,
     (gltf) => {
         const model = gltf.scene;
         scene.add(model);

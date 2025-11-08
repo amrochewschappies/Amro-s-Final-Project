@@ -25,10 +25,21 @@ export function loadNavbar(CurrentPageName) {
   // LEFT - Brand Name
   const nameSection = document.createElement("div");
   nameSection.classList.add("navbar-left");
+
+  const logoLink = document.createElement("a");
+  logoLink.href = "/"; // ✅ takes user back to home page
+  // If you're hosting on GitHub Pages under a repo, use:
+  logoLink.href = "/Amro-s-Final-Project/"; // <-- replace with your repo name
+
   const logo = document.createElement("img");
-  logo.classList.add("logo-image")
-  logo.src = logoUrl
-  nameSection.appendChild(logo);
+  logo.classList.add("logo-image");
+  logo.src = logoUrl;
+  logo.alt = "Amro Logo"; // accessibility improvement
+
+  // Nest the logo inside the anchor
+  logoLink.appendChild(logo);
+  nameSection.appendChild(logoLink);
+
 
   // RIGHT - Buttons
   const rightSection = document.createElement("div");
