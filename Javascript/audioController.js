@@ -505,10 +505,10 @@ class AudioDirector {
 
 // ---------- Asset maps ----------
 const CLIPS = {
-  intro: { url: U("../Assets/First Part.mp3") },
-  verse: { url: U("../Assets/Second Part.mp3") },
-  drop: { url: U("../Assets/Car_Audio_V1.mp3") },
-  project: { url: U("../Assets/Projects Audio.mp3") }
+  intro: { url: U("../Assets/FirstPart.mp3") },
+  verse: { url: U("../Assets/SecondPart.mp3") },
+  drop: { url: U("../Assets/CarAudio.mp3") },
+  project: { url: U("../Assets/ProjectsAudio.mp3") }
 };
 
 const DEFAULT_SFX = U("../Assets/whoosh.mp3");
@@ -521,7 +521,7 @@ const TRANSITION_SFX = {
 };
 
 const AMBIENT = {
-  url: U("../Assets/Rain Background Audio.mp3"),
+  url: U("../Assets/RainBackgroundAudio.mp3"),
   loopStart: 0,
   gain: 0.25,
   enabled: true,
