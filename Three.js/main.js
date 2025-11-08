@@ -346,11 +346,10 @@ gltfLoader.load(glbUrl, (gltf) => {
         if (!playedBlackout4_6) {
           playedBlackout4_6 = true;
           audioDir.switchTo("verse", { mask: true, quantizeToBar: false });
-          audioDir.playInterludeAndSwitch(
-            new URL("../Assets/Flicker.mp3", import.meta.url).toString(),
-            "drop",
-            { duckTo: 0, interludeGain: 1.0 }
-          );
+          audioDir.playInterludeAndSwitch(`${import.meta.env.BASE_URL}audio/Flicker.mp3`, "drop", {
+            duckTo: 0,
+            interludeGain: 1.0,
+          });
         }
       },
       onEnterBack: () => lockBlackout("bridge-4-6"),
@@ -545,7 +544,7 @@ ScrollTrigger.matchMedia({
     gsap.to(camera.position, {
       scrollTrigger: {
         trigger: "#section-3",
-        start: "top top", 
+        start: "top top",
         end: "bottom center",
         scrub: true,
       },
