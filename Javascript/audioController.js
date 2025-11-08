@@ -561,6 +561,14 @@ export function bindScrollToClips() {
   });
 
   ScrollTrigger.create({
+    trigger: ".about-overlay",
+    start: "top top",
+    end: "bottom top",
+    onEnter: () => safe("project"),
+    onEnterBack: () => safe("project"),
+  });
+
+  ScrollTrigger.create({
     trigger: "#section-3",
     start: "top 60%",
     onEnter: () => safe("verse"),

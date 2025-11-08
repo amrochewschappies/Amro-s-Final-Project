@@ -37,7 +37,7 @@ let action = null;
 let hasStarted = false;
 
 loader.load(
-    './Helmet.glb',
+    './Helmet Model.glb',
     (gltf) => {
         const model = gltf.scene;
         scene.add(model);

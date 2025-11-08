@@ -11,6 +11,7 @@ import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import '../Javascript/IntertactiveAnimations.js'
 import { audioDir } from '../Javascript/audioController.js';
 import { mix } from 'three/tsl';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
@@ -72,7 +73,7 @@ camera.position.z = 32;
 camera.position.y = -2;
 camera.position.x = 0.05;
 
-if (window.innerWidth) {
+if (window.innerWidth < 600) {
   camera.position.z = 42;
   camera.position.y = -2;
   camera.position.x = 6.05;
@@ -124,10 +125,20 @@ composer.addPass(bloomPass);
 
 // ===== GLTF & animation
 const gltfLoader = new GLTFLoader(manager);
+
+const draco = new DRACOLoader();
+// Works in dev and in production (GitHub Pages etc.)
+const DRACO_PATH = `${import.meta.env.BASE_URL}draco/`;
+draco.setDecoderPath(DRACO_PATH);
+draco.setDecoderConfig({ type: 'wasm' }); // needs decoder.wasm + wasm_wrapper.js + decoder.js
+draco.preload();
+
+gltfLoader.setDRACOLoader(draco);
+
 let mixer;
 let actions = [];
 
-const glbUrl = new URL('../Assets/Prefinal.glb', import.meta.url).href;
+const glbUrl = new URL('../Assets/Compressed Test1.glb', import.meta.url).href;
 const hdrUrl = new URL('../Assets/DarkStorm4K.hdr', import.meta.url).href;
 const imgUrl = new URL('../Assets/Car Light.png', import.meta.url).href;
 const FLICKER_URL = new URL("../Assets/Flicker.mp3", import.meta.url).toString();
@@ -566,7 +577,7 @@ ScrollTrigger.matchMedia({
   },
 
   // Medium devices (400px–767px)
-  "(min-width: 600px) and (max-width: 2767px)": function () {
+  "(min-width: 600px)": function () {
     gsap.to(camera.position, {
       scrollTrigger: {
         trigger: "#section-3",
