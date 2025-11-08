@@ -158,22 +158,12 @@
 
     <script type="module">
       import { createBounceCards } from "./Javascript/bounceCards.js";
+      const PUB = (p) => `${import.meta.env.BASE_URL}${p}`;
 
-      // Resolve asset URLs relative to THIS HTML module (Vite will fingerprint + rewrite)
-      const R = (p) => new URL(p, import.meta.url).toString();
-
-      // If you renamed to no-spaces (recommended), use these:
-      // const images = [
-      //   R("./Assets/ferrari-background.png"),
-      //   R("./Assets/groveeee-image.png"),
-      //   R("./Assets/mlungisi-logo.png"),
-      // ];
-
-      // If you kept your current filenames with spaces, this still works:
       const images = [
-        R("./Assets/FerrariBackground.png"),
-        R("./Assets/GroveeeeImage.png"),
-        R("./Assets/MlungisiLogo.png"),
+        PUB("images/FerrariBackground.png"),
+        PUB("images/GroveeeeImage.png"),
+        PUB("images/MlungisiLogo.png"),
       ];
 
       const labels = ["FERRARI-GP", "GROVEEEE-GP", "MLUNGISI-GP"];
