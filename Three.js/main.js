@@ -15,10 +15,9 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
-// ---- Loop timing (tweak these) ----
-const CYCLE_SEC = 26;     // total cycle length (intro + play) in seconds
-const INTRO_SEC = 3.2;    // blackout + flicker + reveal timeline duration
-const PLAY_SEC = Math.max(0, CYCLE_SEC - INTRO_SEC); // time animations run each loop
+const CYCLE_SEC = 26;    
+const INTRO_SEC = 2.9;    
+const PLAY_SEC = Math.max(0, CYCLE_SEC - INTRO_SEC); 
 
 const loaderEl = document.getElementById("loader");
 const barEl = document.getElementById("loader-bar");
@@ -27,8 +26,7 @@ const blackoutEl = document.getElementById("blackout");
 const s6Heading = document.getElementById("section-6-heading");
 let s6InView = false;
 
-// ===== Speedometer loader helpers =====
-const ARC_LEN = 251; // must match the stroke-dasharray on #arc in the SVG
+const ARC_LEN = 251;
 function setLoaderProgress(p) {
   const pct = Math.max(0, Math.min(100, p));
   const arc = document.getElementById('arc');
@@ -36,7 +34,7 @@ function setLoaderProgress(p) {
   const spd = document.getElementById('spd');
 
   if (arc) arc.setAttribute('stroke-dashoffset', ARC_LEN * (1 - pct / 100));
-  if (needle) needle.setAttribute('transform', `rotate(${-90 + (pct * 1.8)} 100 120)`); // -90..+90
+  if (needle) needle.setAttribute('transform', `rotate(${-90 + (pct * 1.8)} 100 120)`); 
   if (spd) spd.textContent = Math.round(pct);
 }
 function finishLoader() {
@@ -60,7 +58,6 @@ manager.onLoad = () => {
   finishLoader();
 };
 
-// ===== Scene
 const scene = new THREE.Scene();
 
 const sizes = {
@@ -116,21 +113,18 @@ const bloomPass = new UnrealBloomPass(
   0.4,
   0.85
 );
-// (optional) tame bloom so tiny dots don't flare too much
 bloomPass.threshold = 0.85;
 bloomPass.strength = 1.5;
 bloomPass.radius = 0.4;
 
 composer.addPass(bloomPass);
 
-// ===== GLTF & animation
 const gltfLoader = new GLTFLoader(manager);
 
 const draco = new DRACOLoader();
-// Works in dev and in production (GitHub Pages etc.)
 const DRACO_PATH = `${import.meta.env.BASE_URL}draco/`;
 draco.setDecoderPath(DRACO_PATH);
-draco.setDecoderConfig({ type: 'wasm' }); // needs decoder.wasm + wasm_wrapper.js + decoder.js
+draco.setDecoderConfig({ type: 'wasm' }); 
 draco.preload();
 
 gltfLoader.setDRACOLoader(draco);
@@ -152,26 +146,24 @@ gltfLoader.load(glbUrl, (gltf) => {
   if (gltf.animations && gltf.animations.length) {
     mixer = new THREE.AnimationMixer(gltf.scene);
 
-    // Let all clips loop freely during the play window
     actions = gltf.animations.map((clip) => {
       const a = mixer.clipAction(clip);
       a.setLoop(THREE.LoopRepeat, Infinity);
       a.clampWhenFinished = false;
       a.enabled = true;
       a.play();
-      a.paused = true; // idle until we start a cycle
+      a.paused = true; 
       return a;
     });
 
-    // Utility helpers for cycle control
-    let cycleDC = null; // gsap.delayedCall handle
+    let cycleDC = null;
 
     const toFirstFrame = () => {
       if (!mixer) return;
       actions.forEach(a => {
         a.enabled = true;
-        a.reset();       // time=0, weight=1
-        a.paused = true; // hold at frame 0
+        a.reset();     
+        a.paused = true; 
       });
       mixer.setTime(0);
     };
@@ -187,53 +179,47 @@ gltfLoader.load(glbUrl, (gltf) => {
     };
     const scheduleNextCycle = () => {
       cancelNextCycle();
-      // After animations play for PLAY_SEC, go back to blackout→flicker→reveal
       cycleDC = gsap.delayedCall(PLAY_SEC, () => {
 
-        if (!s6InView) return;          // don't loop when off-screen
-        pauseAll();                     // freeze before blackout
+        if (!s6InView) return;        
+        pauseAll();             
         rightCarLight.intensity = 0;
         leftCarLight.intensity = 0;
-        lockBlackout("s6-intro");       // use shared blackout
-        section6RevealTL.restart(true); // will unlock + playFromStart + reschedule
+        lockBlackout("s6-intro");      
+        section6RevealTL.restart(true); 
       });
     };
 
-    // ===== Section 6 timeline (blackout → flicker → reveal → play)
     const section6RevealTL = gsap.timeline({ paused: true });
 
     section6RevealTL
       .add(() => {
-        // heading prep + blink while black
         gsap.set(s6Heading, { zIndex: 10000, opacity: 0 });
         setTimeout(() => {
           s6Heading?.classList.add('s6-blink');
 
         }, 1700);
 
-        // play flicker interlude during blackout, auto-switch to "drop"
         audioDir.playInterludeAndSwitch(FLICKER_URL, "drop", {
           duckTo: 0,
           interludeGain: 1.0,
         });
 
-        // dim headlights while black
         rightCarLight.intensity = 0;
         leftCarLight.intensity = 0;
       })
-      .to({}, { duration: INTRO_SEC - 0.3 }) // hold black during flicker (e.g., 2.9s)
+      .to({}, { duration: INTRO_SEC - 0.3 }) 
       .add(() => {
         s6Heading?.classList.remove('s6-blink');
         gsap.set(s6Heading, { zIndex: 10000, opacity: 1 });
       })
       .to({}, { duration: 0.3 })
       .add(() => {
-        // reveal and start animation
-        unlockBlackout("s6-intro"); // shared
+        unlockBlackout("s6-intro"); 
         if (s6InView) {
           setTimeout(() => {
             playFromStart();
-            scheduleNextCycle();      // start the play window timer
+            scheduleNextCycle();      
           }, 2000);
         } else {
           actions.forEach(a => { a.reset(); a.paused = true; });
@@ -241,7 +227,6 @@ gltfLoader.load(glbUrl, (gltf) => {
         }
       });
 
-    // ===== ScrollTrigger for Section 6
     ScrollTrigger.create({
       trigger: "#section-6",
       start: "top center",
@@ -275,7 +260,7 @@ gltfLoader.load(glbUrl, (gltf) => {
           });
         }
 
-        section6RevealTL.restart(true); // runs intro → play → schedule
+        section6RevealTL.restart(true); 
       },
 
       onEnterBack: () => {
@@ -335,7 +320,6 @@ gltfLoader.load(glbUrl, (gltf) => {
       }
     });
 
-    // ===== Bridge 4→6 (kept)
     let playedBlackout4_6 = false;
     ScrollTrigger.create({
       trigger: "#bridge-4-6",
@@ -347,7 +331,7 @@ gltfLoader.load(glbUrl, (gltf) => {
           playedBlackout4_6 = true;
           audioDir.switchTo("verse", { mask: true, quantizeToBar: false });
           audioDir.playInterludeAndSwitch(
-            new URL("../Assets/Flicker.mp3", import.meta.url).toString(),
+            new URL("audio/Flicker.mp3", import.meta.url).toString(),
             "drop",
             { duckTo: 0, interludeGain: 1.0 }
           );
@@ -359,7 +343,6 @@ gltfLoader.load(glbUrl, (gltf) => {
       refreshPriority: 10,
     });
 
-    // ===== Bridge 6→7 (kept)
     ScrollTrigger.create({
       trigger: "#bridge-6-7",
       start: "top top",
@@ -374,7 +357,6 @@ gltfLoader.load(glbUrl, (gltf) => {
   }
 }, undefined, (err) => console.error("GLB load error:", err));
 
-// ===== Blackout control (shared – single source of truth)
 const blackoutLocks = new Set();
 function _applyBlackout() {
   blackoutEl?.classList.toggle('is-visible', blackoutLocks.size > 0);
@@ -392,7 +374,6 @@ function clearAllBlackouts() {
   _applyBlackout();
 }
 
-// ===== Rain
 const RAIN_COUNT = 15000;
 const RAIN_AREA = { w: 160, h: 120, d: 160 };
 const FALL_MIN = 20, FALL_MAX = 34;
@@ -458,7 +439,6 @@ function updateRain(dt) {
   if (changed) rainGeom.attributes.position.needsUpdate = true;
 }
 
-// ===== Env + *controlled* glow sprites
 const rgbeLoader = new RGBELoader(manager);
 rgbeLoader.load(hdrUrl, (tex) => {
   tex.mapping = THREE.EquirectangularReflectionMapping;
@@ -468,7 +448,6 @@ rgbeLoader.load(hdrUrl, (tex) => {
 
 const textureLoader = new THREE.TextureLoader(manager);
 
-// --- NEW: single sprite creator and intensity-sync ---
 let leftGlow, rightGlow, glowTexture;
 
 function createGlow(position) {
@@ -477,7 +456,7 @@ function createGlow(position) {
     transparent: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    opacity: 0 // start hidden
+    opacity: 0 
   });
   const s = new THREE.Sprite(mat);
   s.scale.set(2, 2, 1);
@@ -486,14 +465,12 @@ function createGlow(position) {
   return s;
 }
 
-// preload texture once, then build both sprites
 textureLoader.load(imgUrl, (tex) => {
   glowTexture = tex;
   leftGlow = createGlow(leftCarLight.position);
   rightGlow = createGlow(rightCarLight.position);
 });
 
-// keep glow opacity in sync with light intensity (0..150 → 0..1)
 function syncHeadlightGlow() {
   if (!leftGlow || !rightGlow) return;
   const toAlpha = (i) => THREE.MathUtils.clamp(i / 150, 0, 1);
@@ -503,7 +480,6 @@ function syncHeadlightGlow() {
   rightGlow.visible = rightCarLight.intensity > 0.01;
 }
 
-// ===== Scroll-linked lights/camera
 gsap.to([leftCarLight, rightCarLight], {
   scrollTrigger: {
     trigger: "#section-1",
@@ -512,7 +488,7 @@ gsap.to([leftCarLight, rightCarLight], {
     scrub: true,
   },
   intensity: 150,
-  onUpdate: syncHeadlightGlow // keep synced while scrubbing
+  onUpdate: syncHeadlightGlow 
 });
 
 
@@ -540,7 +516,6 @@ let projects_tl = gsap.timeline({
 
 
 ScrollTrigger.matchMedia({
-  // Small phones (<400px)
   "(max-width: 599px)": function () {
     gsap.to(camera.position, {
       scrollTrigger: {

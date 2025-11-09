@@ -1,9 +1,7 @@
-// AudioDirector.js — ESM-safe asset URLs
 import { gsap } from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
-// Resolve a file path relative to THIS module (works with Vite/ESM)
 const U = (rel) => `${import.meta.env.BASE_URL}${rel}`;
 
 class AudioDirector {
@@ -49,15 +47,17 @@ class AudioDirector {
     this.ambientGain = null;
     this.ambientEnabled = !!(ambient && (ambient.enabled ?? true));
 
-    this.tracks = new Map(); // id -> { node, gain, loopStart, loopEnd, buffer }
+    this.tracks = new Map();
     this.transportStartTime = null;
+
+    this.pendingInterlude = null;
   }
 
   async _ensureCtx() {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       this.master = this.ctx.createGain();
-      this.master.gain.value = 0; // start silent
+      this.master.gain.value = 0; 
       this.master.connect(this.ctx.destination);
     }
     if (this.ctx.state !== "running") await this.ctx.resume();
@@ -90,6 +90,7 @@ class AudioDirector {
 
   async loadAll() {
     await this._ensureCtx();
+
     const clipLoads = Object.entries(this.clips).map(([id, meta]) =>
       this._loadClip(id, meta.url)
     );
@@ -109,7 +110,6 @@ class AudioDirector {
     this.ready = true;
   }
 
-  // --- persistent track creation (start once, then gain-only control) ---
   _ensureTrack(id) {
     if (this.tracks.has(id)) return this.tracks.get(id);
 
@@ -125,11 +125,10 @@ class AudioDirector {
     node.loopEnd = loopEnd;
 
     const g = this.ctx.createGain();
-    g.gain.value = 0; // start silent
+    g.gain.value = 0; 
     node.connect(g);
     g.connect(this.master);
 
-    // Start all tracks relative to one transport start time so phase is stable
     const t0 = this.transportStartTime ?? this.ctx.currentTime + 0.02;
     if (!this.transportStartTime) this.transportStartTime = t0;
     node.start(t0, loopStart);
@@ -171,8 +170,6 @@ class AudioDirector {
     this.ambientGain = a.gain;
   }
 
-  // --- PUBLIC API (gain-only crossfades, persistent nodes) ---
-
   async start(id) {
     if (!this.ready) await this.loadAll();
     this._ensureAmbientStarted();
@@ -198,6 +195,7 @@ class AudioDirector {
 
   stop() {
     if (!this.ctx) return;
+    this.cancelInterlude();
     const t = this.ctx.currentTime;
     for (const { gain } of this.tracks.values()) {
       gain.gain.setValueAtTime(gain.gain.value, t);
@@ -236,9 +234,6 @@ class AudioDirector {
     }
   }
 
-  // Inside class AudioDirector { ... }
-
-  // helper you can call from outside if needed
   cancelInterlude() {
     if (this.pendingInterlude?.cancel) {
       this.pendingInterlude.cancel();
@@ -249,7 +244,6 @@ class AudioDirector {
   async switchTo(id, { mask = true, quantizeToBar = false } = {}) {
     if (!this.ready) await this.loadAll();
 
-    // 🔑 cancel any scheduled interlude switch before doing anything else
     this.cancelInterlude();
 
     if (!this.current) return this.start(id);
@@ -276,20 +270,6 @@ class AudioDirector {
     if (mask) await this._playTransitionSfx(this.current.id, id, at);
     this.current = { id, ...next };
   }
-
-  stop() {
-    if (!this.ctx) return;
-    // also cancel when stopping everything
-    this.cancelInterlude();
-
-    const t = this.ctx.currentTime;
-    for (const { gain } of this.tracks.values()) {
-      gain.gain.setValueAtTime(gain.gain.value, t);
-      gain.gain.linearRampToValueAtTime(0, t + this.crossfadeSec);
-    }
-    this.current = null;
-  }
-
 
   async _playTransitionSfx(fromId, toId, at) {
     let url = this.transitionSfx[`${fromId}->${toId}`];
@@ -322,7 +302,7 @@ class AudioDirector {
   async _fadeMasterTo(target, dur) {
     const t0 = this.ctx.currentTime;
     const g = this.master.gain;
-    try { g.setValueAtTime(g.value, t0); } catch { }
+    try { g.setValueAtTime(g.value, t0); } catch {}
     g.linearRampToValueAtTime(target, t0 + dur);
     await new Promise((r) => setTimeout(r, dur * 1000));
   }
@@ -358,8 +338,8 @@ class AudioDirector {
       g.connect(this.master);
       tr = { gain: g, loopStart, loopEnd, buffer };
     } else {
-      try { tr.node.stop(at); } catch { }
-      try { tr.node.disconnect(); } catch { }
+      try { tr.node.stop(at); } catch {}
+      try { tr.node.disconnect(); } catch {}
       tr.loopStart = loopStart;
       tr.loopEnd = loopEnd;
       tr.buffer = buffer;
@@ -380,9 +360,6 @@ class AudioDirector {
     return tr;
   }
 
-  // ---- Interlude during blackout (duck -> one-shot -> switch) ----
-  pendingInterlude = null;
-
   async playInterludeAndSwitch(
     url,
     nextId,
@@ -399,24 +376,17 @@ class AudioDirector {
 
     const now = this.ctx.currentTime;
 
-    // 1) Duck current
     if (this.current) {
       const g = this.current.gain.gain;
       g.setValueAtTime(g.value, now);
       g.linearRampToValueAtTime(duckTo, now + crossfade);
     }
 
-    // 2) Load interlude
     const buf = await this._loadSfx(url);
     if (!buf) return;
 
-    // optionally prewarm next track
-    if (!freshNext && nextId) this._ensureTrack?.(nextId);
-
-    // cancel previous interlude
     if (this.pendingInterlude?.cancel) this.pendingInterlude.cancel();
 
-    // 3) Start flicker (one-shot)
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
     const sG = this.ctx.createGain();
@@ -429,9 +399,7 @@ class AudioDirector {
 
     let cancelled = false;
 
-    // 4) Compute exact switch time
-    const nominalEnd = tStart + buf.duration;
-    let scheduleAt = nominalEnd + postDelaySec;
+    let scheduleAt = tStart + buf.duration + postDelaySec;
 
     if (quantizeToBar && this.bpm) {
       const spb = 60 / this.bpm;
@@ -442,21 +410,16 @@ class AudioDirector {
 
     scheduleAt = Math.max(scheduleAt, this.ctx.currentTime + 0.02);
 
-    // 5) Fire the switch exactly at scheduleAt
     const fire = async () => {
       if (cancelled || !nextId) return;
 
-      // SAME-ID restart (e.g., back to "drop" again)
       if (this.current?.id === nextId) {
         const restarted = this._restartTrackAt(nextId, scheduleAt);
-
         const g = restarted.gain.gain;
         g.setValueAtTime(g.value, scheduleAt);
         g.linearRampToValueAtTime(1, scheduleAt + crossfade);
 
-        if (!this.userMuted) {
-          this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
-        }
+        if (!this.userMuted) this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
 
         await this._playTransitionSfx(nextId, nextId, scheduleAt);
         this.current = { id: nextId, ...restarted };
@@ -464,7 +427,6 @@ class AudioDirector {
         return;
       }
 
-      // Different track: normal crossfade
       const nextTrack = freshNext
         ? this._restartTrackAt(nextId, scheduleAt)
         : this._ensureTrack(nextId);
@@ -479,45 +441,39 @@ class AudioDirector {
         gCur.linearRampToValueAtTime(0, scheduleAt + crossfade);
       }
 
-      if (!this.userMuted) {
-        this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
-      }
+      if (!this.userMuted) this._fadeMasterTo(this.masterGainLevel, this.pauseFadeSec);
 
       await this._playTransitionSfx(this.current?.id, nextId, scheduleAt);
       this.current = { id: nextId, ...nextTrack };
       this.pendingInterlude = null;
     };
 
-    // schedule the switch
     const ms = Math.max(0, (scheduleAt - this.ctx.currentTime) * 1000);
     const timer = setTimeout(fire, ms);
 
-    // upgrade cancel() to clear timer & stop the one-shot
     this.pendingInterlude = {
       cancel: () => {
         cancelled = true;
-        try { src.stop(); } catch { }
-        try { clearTimeout(timer); } catch { }
+        try { src.stop(); } catch {}
+        try { clearTimeout(timer); } catch {}
       },
     };
   }
 }
 
-// ---------- Asset maps ----------
 const CLIPS = {
-  intro: { url: U("audio/FirstPart.mp3") },
-  verse: { url: U("audio/SecondPart.mp3") },
-  drop: { url: U("audio/CarAudio.mp3") },
-  project: { url: U("audio/ProjectsAudio.mp3") }
+  intro:   { url: U("audio/FirstPart.mp3") },
+  verse:   { url: U("audio/SecondPart.mp3") },
+  drop:    { url: U("audio/CarAudio.mp3") },
+  project: { url: U("audio/ProjectsAudio.mp3") },
 };
 
 const DEFAULT_SFX = U("audio/whoosh.mp3");
 
 const TRANSITION_SFX = {
-  "intro->verse": U("audio/whoosh.mp3"),
-  "verse->drop": U("audio/whoosh.mp3"),
-  "drop->project": U("audio/whoosh.mp3"),
-
+  "intro->verse":   U("audio/whoosh.mp3"),
+  "verse->drop":    U("audio/whoosh.mp3"),
+  "drop->project":  U("audio/whoosh.mp3"),
 };
 
 const AMBIENT = {
@@ -541,107 +497,131 @@ export const audioDir = new AudioDirector({
   ambient: AMBIENT,
 });
 
-// ---------- Scroll bindings ----------
 let _scrollBound = false;
+
+function exists(sel) {
+  return !!document.querySelector(sel);
+}
+
+function createTrigger(opts) {
+  if (typeof opts.trigger === "string" && !exists(opts.trigger)) return null;
+  return ScrollTrigger.create(opts);
+}
+
 export function bindScrollToClips() {
   if (_scrollBound) return;
   _scrollBound = true;
 
-  const safe = (id) => {
-    // Select the clip; if userMuted, crossfade happens under master=0
-    audioDir.switchTo(id, { mask: true, quantizeToBar: false });
-  };
+  const path = window.location.pathname.toLowerCase();
+  const IS_ABOUT =
+    path.includes("about") || exists(".about-overlay");
+  const IS_HOME =
+    (!IS_ABOUT) && (exists("#hero") || path.endsWith("/") || path.includes("index"));
 
-  ScrollTrigger.create({
-    trigger: "#hero",
-    start: "top top",
-    end: "bottom top",
-    onEnter: () => safe("intro"),
-    onEnterBack: () => safe("intro"),
-  });
+  window.addEventListener("load", () => setTimeout(() => ScrollTrigger.refresh(), 0));
 
-  ScrollTrigger.create({
-    trigger: ".about-overlay",
-    start: "top top",
-    end: "bottom top",
-    onEnter: () => safe("project"),
-    onEnterBack: () => safe("project"),
-  });
+  if (IS_ABOUT) {
+    ScrollTrigger.getAll().forEach(t => t.kill());
+    audioDir.cancelInterlude();
 
-  ScrollTrigger.create({
-    trigger: "#section-3",
-    start: "top 60%",
-    onEnter: () => safe("verse"),
-    onEnterBack: () => safe("verse"),
-  });
+    audioDir.switchTo("project", { mask: false });
+    audioDir.play(); 
 
-  ScrollTrigger.create({
-    trigger: "#section-4",
-    start: "top 60%",
-    onEnterBack: () => safe("verse"),
-  });
+    createTrigger({
+      trigger: ".about-overlay",
+      start: "top bottom",
+      end: "bottom top",
+      onEnter:  () => audioDir.switchTo("project", { mask: true }),
+      onEnterBack: () => audioDir.switchTo("project", { mask: true }),
+      onLeave: () => {
+        audioDir.stop();
+      },
+      onLeaveBack: () => {
+        audioDir.stop();
+      },
+    });
 
-  ScrollTrigger.create({
-    trigger: "#projects-section",
-    start: "top 100%",
-    once: true,
-    onEnter: () => safe("project"),
-    onEnterBack: () => safe("project"),
-  });
+    return; 
+  }
 
-  let dropTimer = null;
-  ScrollTrigger.create({
-    trigger: "#section-6",
-    start: "top 60%",
-    onEnter: () => {
-      // play flicker, then hard-restart drop at loopStart when flicker ends
-      audioDir.playInterludeAndSwitch(U("audio/Flicker.mp3"), "drop", {
-        duckTo: 0,
-        interludeGain: 1.0,
-        crossfade: 2.28,
-        postDelaySec: 0,
-        quantizeToBar: false,
-        freshNext: true,
-      }
-      );
-    },
-    onEnterBack: () => {
-      audioDir.playInterludeAndSwitch(U("audio/Flicker.mp3"), "drop", {
-        duckTo: 0,
-        interludeGain: 1.0,
-        crossfade: 0.28,
-        postDelaySec: -1.9,
-        quantizeToBar: false,
-        freshNext: true,
-      });
-    },
-    onLeave: () => { if (dropTimer) { dropTimer.kill(); dropTimer = null; audioDir.cancelInterlude() } },
-    onLeaveBack: () => { if (dropTimer) { dropTimer.kill(); dropTimer = null; audioDir.cancelInterlude() } },
-  });
-  
-  // Put this near your other ScrollTriggers
-  let vroomReady = true;
+  if (IS_HOME) {
+    const safe = (id) => audioDir.switchTo(id, { mask: true, quantizeToBar: false });
 
-  const fireVroom = () => {
-    if (!vroomReady) return;
-    vroomReady = false;
-    audioDir.playOneShot(U("audio/Vroom.mp3"), { gain: 3.9 });
-  };
+    createTrigger({
+      trigger: "#hero",
+      start: "top top",
+      end: "bottom top",
+      onEnter: () => safe("intro"),
+      onEnterBack: () => safe("intro"),
+    });
 
-  ScrollTrigger.create({
-    trigger: "#section-1",
-    start: "top 100%",
-    // IMPORTANT: remove once:true so it can run again later
-    onEnter: (self) => {
-      // only when scrolling DOWN into the trigger
-      if (self.direction === 1) fireVroom();
-    },
-    // when you scroll back above the trigger, re-arm it
-    onLeaveBack: () => { vroomReady = true; },
-  });
+    createTrigger({
+      trigger: "#section-3",
+      start: "top 60%",
+      onEnter: () => safe("verse"),
+      onEnterBack: () => safe("verse"),
+    });
 
+    createTrigger({
+      trigger: "#section-4",
+      start: "top 60%",
+      onEnterBack: () => safe("verse"),
+    });
 
-  window.addEventListener("load", () =>
-    setTimeout(() => ScrollTrigger.refresh(), 0)
-  );
+    createTrigger({
+      trigger: "#projects-section",
+      start: "top 100%",
+      onEnter: () => safe("project"),
+      onEnterBack: () => safe("project"),
+    });
+
+    let dropTimer = null;
+    const killDropTimer = () => {
+      if (dropTimer) { dropTimer.kill?.(); dropTimer = null; }
+      audioDir.cancelInterlude();
+    };
+
+    createTrigger({
+      trigger: "#section-6",
+      start: "top 60%",
+      onEnter: () => {
+        audioDir.playInterludeAndSwitch(U("audio/Flicker.mp3"), "drop", {
+          duckTo: 0,
+          interludeGain: 1.0,
+          crossfade: 2.28,
+          postDelaySec: 0,
+          quantizeToBar: false,
+          freshNext: true,
+        });
+      },
+      onEnterBack: () => {
+        audioDir.playInterludeAndSwitch(U("audio/Flicker.mp3"), "drop", {
+          duckTo: 0,
+          interludeGain: 1.0,
+          crossfade: 0.28,
+          postDelaySec: -1.9,
+          quantizeToBar: false,
+          freshNext: true,
+        });
+      },
+      onLeave: killDropTimer,
+      onLeaveBack: killDropTimer,
+    });
+
+    let vroomReady = true;
+    const fireVroom = () => {
+      if (!vroomReady) return;
+      vroomReady = false;
+      audioDir.playOneShot(U("audio/Vroom.mp3"), { gain: 3.9 });
+    };
+
+    createTrigger({
+      trigger: "#section-1",
+      start: "top 100%",
+      onEnter: (self) => {
+        if (self.direction === 1) fireVroom();
+      },
+      onLeaveBack: () => { vroomReady = true; },
+    });
+  }
 }

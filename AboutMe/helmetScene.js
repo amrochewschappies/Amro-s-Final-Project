@@ -1,105 +1,133 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// ===== Config =====
-const ANIM_DELAY_MS = 2000; // <- start animation after 3s (change as you like)
-const CLIP_INDEX = 0;       // <- which animation to play if there are multiple
+// ---- Postprocessing imports ----
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass.js';
+import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
+import { LuminosityShader } from 'three/examples/jsm/shaders/LuminosityShader.js';
 
-// Scene setup
+// ===== Config =====
+const ANIM_DELAY_MS = 2000; // start animation after 2s
+const CLIP_INDEX = 0;       // which animation to play if there are multiple
+
+// ===== Scene =====
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(
+  60,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
 camera.position.set(0, 17, 40);
 
 const renderer = new THREE.WebGLRenderer({
-    canvas: document.getElementById('three-canvas'),
-    antialias: true
+  canvas: document.getElementById('three-canvas'),
+  antialias: true
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-// Lights
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
 hemiLight.position.set(0, 20, 0);
 scene.add(hemiLight);
 
-const sceneLight = new THREE.AmbientLight(0xffffff, 5);
-scene.add(sceneLight);
+const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambient);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
 dirLight.position.set(3, 10, 10);
 scene.add(dirLight);
 
-// Load model + setup animation (play once after delay)
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+
+const grayPass = new ShaderPass(LuminosityShader);
+composer.addPass(grayPass);
+
+const glitchPass = new GlitchPass();
+glitchPass.goWild = false; 
+composer.addPass(glitchPass);
+
+const filmPass = new FilmPass(
+  0.35,
+  0.025, 
+  648,   
+  false 
+);
+composer.addPass(filmPass);
+
 const loader = new GLTFLoader();
 let mixer = null;
 let action = null;
 let hasStarted = false;
 
-const MODEL_URL = new URL("./helmet-model.glb", import.meta.url).toString();
+const MODEL_URL = new URL('./helmet-model.glb', import.meta.url).toString();
 
 loader.load(
-    MODEL_URL,
-    (gltf) => {
-        const model = gltf.scene;
-        scene.add(model);
+  MODEL_URL,
+  (gltf) => {
+    const model = gltf.scene;
+    scene.add(model);
 
-        if (gltf.animations && gltf.animations.length > 0) {
-            mixer = new THREE.AnimationMixer(model);
-            const clip = gltf.animations[Math.min(CLIP_INDEX, gltf.animations.length - 1)];
-            action = mixer.clipAction(clip);
+    if (gltf.animations && gltf.animations.length > 0) {
+      mixer = new THREE.AnimationMixer(model);
+      const clip = gltf.animations[Math.min(CLIP_INDEX, gltf.animations.length - 1)];
+      action = mixer.clipAction(clip);
 
-            // Play ONCE, keep last frame
-            action.setLoop(THREE.LoopOnce, 0);
-            action.clampWhenFinished = true;
+      action.setLoop(THREE.LoopOnce, 0);
+      action.clampWhenFinished = true;
+      action.paused = true;
 
-            // Start paused; trigger later
-            action.paused = true;
+      mixer.addEventListener('finished', () => {
+        action.paused = true;
+        action.enabled = true;
+        action.time = action.getClip().duration;
+        mixer.update(0);
+      });
 
-            // When it finishes, stop updating the mixer to save CPU
-            mixer.addEventListener('finished', () => {
-                // Freeze exactly on the last frame and keep the pose
-                action.paused = true;
-                action.enabled = true;                   // keep its influence active
-                action.time = action.getClip().duration; // ensure it's at the final frame
-                mixer.update(0);                         // apply pose immediately
-                // (Do NOT call mixer.stopAllAction())
-            });
+      setTimeout(() => {
+        if (action && !hasStarted) {
+          hasStarted = true;
+          action.reset();
+          action.paused = false;
+          action.play();
 
-            // Delay start
-            setTimeout(() => {
-                if (action && !hasStarted) {
-                    hasStarted = true;
-                    action.reset();
-                    action.paused = false;
-                    action.play();
-                    document.querySelector('.about-overlay').classList.add('visible'); // triggers fade-in
-                }
-            }, ANIM_DELAY_MS);
-        } else {
-            // No animations: still fade in after the same delay
-            setTimeout(() => {
-                document.querySelector('.about-overlay').classList.add('visible');
-            }, ANIM_DELAY_MS);
+
+          const overlay = document.querySelector('.about-overlay');
+          if (overlay) overlay.classList.add('visible');
         }
-    },
-    undefined,
-    (error) => console.error('Error loading GLTF:', error)
+      }, ANIM_DELAY_MS);
+    } else {
+      setTimeout(() => {
+        const overlay = document.querySelector('.about-overlay');
+        if (overlay) overlay.classList.add('visible');
+      }, ANIM_DELAY_MS);
+    }
+  },
+  undefined,
+  (error) => console.error('Error loading GLTF:', error)
 );
 
-// Resize handling
 window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(w, h);
+  composer.setSize(w, h);
 });
 
-// Animation loop
 const clock = new THREE.Clock();
 function animate() {
-    requestAnimationFrame(animate);
-    const delta = clock.getDelta();
-    if (mixer) mixer.update(delta);
-    renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  if (mixer) mixer.update(delta);
+  composer.render();
 }
 animate();

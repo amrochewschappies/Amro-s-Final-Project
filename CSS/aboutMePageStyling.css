@@ -80,35 +80,46 @@ body {
   transform: translateY(0);
 }
 
-/* ===== Responsive adjustments ===== */
-@media (max-width: 768px) {
-  .corner {
-    width: 40%;
+
+@media (max-width: 600px) {
+  .corner p{
+    
+    font-size: 0.6rem;
+  }
+
+  .corner h2{
+    
     font-size: 0.9rem;
   }
-  .corner h2 {
-    font-size: 1rem;
-  }
-  .corner p {
-    font-size: 0.8rem;
-  }
-}
 
-@media (max-width: 480px) {
   .corner {
-    width: 80%;
-    left: 10%;
-    right: 10%;
+    width: 50%;
     text-align: center;
   }
 
-  .top-left,
-  .top-right {
-    top: 10%;
+  .top-left {
+    top: 18%;
+    left: 5%;
+    text-align: left;
   }
 
-  .bottom-left,
-  .bottom-right {
-    bottom: 10%;
+  .top-right{
+    top: 33%;
+    right: 5%;
+    text-align: right;
   }
+
+  .bottom-left {
+    top: 50%;
+    left: 5%;
+    text-align: left;
+  }
+
+  .bottom-right{
+    top: 71%;
+    right: 5%;
+    text-align: right;
+  }
+
+  
 }

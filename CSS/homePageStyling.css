@@ -132,7 +132,7 @@ h1 {
   position: relative;
   left: 0;
   /* was 15vw — could push past edge */
-  top: 18vh;
+  top: 23vh;
   margin: 0 auto;
   /* center without offset */
   padding-inline: 1rem;
@@ -515,12 +515,43 @@ h1 {
   margin-top: -5vmin;
   font: 700 clamp(18px, 5vw, 42px)/1 "Orbitron", system-ui, sans-serif;
   letter-spacing: .06em;
-  color: #ff4545;
-  text-shadow: 0 0 18px rgba(255, 69, 69, .3);
+  color: #5e5c5c;
+  text-shadow: 0 0 18px rgba(155, 153, 153, 0.3);
 }
 
 .loader.speedo.exit {
   animation: fadeUp .5s ease forwards;
+}
+
+/* container element you pass in can use this class */
+.bounce-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.bounce-card {
+  will-change: transform;
+}
+
+.bounce-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 14px;
+}
+
+#footer {
+  display: flex;
+  justify-content: center;
+  gap: 20%;
+  align-items: center;
+}
+
+#footer a {
+  color: white;
 }
 
 @keyframes fadeUp {
@@ -529,6 +560,22 @@ h1 {
     transform: translateY(-8px) scale(1.02);
   }
 }
+
+@media (min-width: 100px) and (max-width: 1300px) {
+  #section-4-container {
+    position: relative;
+    perspective: 800px;
+    transform-style: preserve-3d;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+
+}
+
 
 
 @media (min-width: 800px) and (max-width: 1400px) {
@@ -627,6 +674,7 @@ h1 {
   #scroll-container {
     position: fixed;
     top: 94vh;
+    width: max-content;
     left: 50%;
     transform: translate(-50%, -50%);
     color: rgba(168, 164, 164, 0.54);
@@ -635,7 +683,7 @@ h1 {
     pointer-events: none;
   }
 
-  #section-6-heading{
+  #section-6-heading {
     font-size: 5rem;
     top: -7%;
   }
@@ -643,4 +691,37 @@ h1 {
   #number-plate {
     display: none;
   }
+
+  /* base */
+  .bounce-wrap {
+    position: relative;
+  }
+
+  .bounce-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 14px;
+  }
+
+  #my-bouncecards.bounce-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* two columns */
+    gap: 12px;
+    padding-left: 0;
+    justify-items: stretch;
+  }
+
+  #my-bouncecards .bounce-card {
+    transform: none !important;
+    /* kill rotations/translates */
+    position: static !important;
+    /* ensure they sit in the grid flow */
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    /* tweak as you like, or remove */
+  }
+
 }

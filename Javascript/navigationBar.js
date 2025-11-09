@@ -1,7 +1,4 @@
-// navbar.js
-// UPDATED: audio button now play/pause (no restart) and binds scroll on first click.
-
-import { audioDir, bindScrollToClips } from "./audioController.js"; // adjust path
+import { audioDir, bindScrollToClips } from "./audioController.js";
 
 const BASE =
   (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) ||
@@ -13,39 +10,31 @@ const navPages = [
   { name: "Projects", href: `${BASE}index.html#projects-section` },
 ];
 
-
 const logoUrl = new URL('../Assets/Amros Logo.png', import.meta.url).href;
 
 export function loadNavbar(CurrentPageName) {
   const nav = document.querySelector("#nav-bar");
+  if (!nav) return;
 
   const navbarContainer = document.createElement("div");
   navbarContainer.classList.add("navbar-container");
 
-  // LEFT - Brand Name
   const nameSection = document.createElement("div");
   nameSection.classList.add("navbar-left");
 
   const logoLink = document.createElement("a");
-  logoLink.href = "/"; // ✅ takes user back to home page
-  // If you're hosting on GitHub Pages under a repo, use:
-  logoLink.href = "/Amro-s-Final-Project/"; // <-- replace with your repo name
+  logoLink.href = "/Amro-s-Final-Project/";
 
   const logo = document.createElement("img");
   logo.classList.add("logo-image");
   logo.src = logoUrl;
-  logo.alt = "Amro Logo"; // accessibility improvement
-
-  // Nest the logo inside the anchor
+  logo.alt = "Amro Logo";
   logoLink.appendChild(logo);
   nameSection.appendChild(logoLink);
 
-
-  // RIGHT - Buttons
   const rightSection = document.createElement("div");
   rightSection.classList.add("navbar-right");
 
-  // --- Audio Button (icon) ---
   const audioBtn = document.createElement("button");
   audioBtn.classList.add("audio-btn");
 
@@ -60,11 +49,9 @@ export function loadNavbar(CurrentPageName) {
   path.setAttribute("stroke-linecap", "round");
   path.setAttribute("stroke-linejoin", "round");
 
-  // Paths
   const STRAIGHT = "M2 12H22";
-  const WAVE = "M2 12c1.5-2 3-2 4.5 0s3 2 4.5 0 3-2 4.5 0 3 2 4.5 0";
-
-  path.setAttribute("d", STRAIGHT); // start with straight line
+  const WAVE     = "M2 12c1.5-2 3-2 4.5 0s3 2 4.5 0 3-2 4.5 0 3 2 4.5 0";
+  path.setAttribute("d", STRAIGHT);
   audioSVG.appendChild(path);
   audioBtn.appendChild(audioSVG);
 
@@ -73,7 +60,7 @@ export function loadNavbar(CurrentPageName) {
   const setStraight = () => { path.setAttribute("d", STRAIGHT); path.classList.remove("wave-animate"); };
 
   audioBtn.addEventListener("click", async () => {
-    const playing = await audioDir.toggle({ startId: "intro" }); // play/pause with fades
+    const playing = await audioDir.toggle({ startId: "intro" }); 
     if (playing) {
       setWave();
       if (!scrollBound) { bindScrollToClips(); scrollBound = true; }
@@ -82,12 +69,17 @@ export function loadNavbar(CurrentPageName) {
     }
   });
 
+  const audioWrapper = document.createElement("div");
+  audioWrapper.classList.add("audio-wrapper");
 
-  const SECTION_OFFSETS = {
-    "#projects-section": -35, // <-- set your custom offset in px
-  };
+  const audioNotice = document.createElement("div");
+  audioNotice.classList.add("audio-notice");
+  audioNotice.innerHTML = "Best<br>experienced<br>with<br>audio";
 
-  // helper: smooth scroll with offset
+  audioWrapper.appendChild(audioBtn);
+  audioWrapper.appendChild(audioNotice);
+
+  const SECTION_OFFSETS = { "#projects-section": -55 };
   function scrollToWithOffset(selector, offsetPx = 0) {
     const el = document.querySelector(selector);
     if (!el) return;
@@ -95,23 +87,19 @@ export function loadNavbar(CurrentPageName) {
     window.scrollTo({ top: y, behavior: "smooth" });
   }
 
-
-  // LET'S TALK button
   const talkBtn = document.createElement("button");
   talkBtn.classList.add("talk-btn");
   talkBtn.innerText = "LET'S TALK";
-
   talkBtn.addEventListener("click", () => {
     window.location.href = "mailto:amro4ahmed4@gmail.com?subject=Let's%20Talk&body=Hi%20Amro,";
   });
 
-  // MENU button
   const menuWrapper = document.createElement("div");
   menuWrapper.classList.add("menu-wrapper");
 
   const menuBtn = document.createElement("button");
   menuBtn.classList.add("menu-btn");
-  menuBtn.innerHTML = "MENU &#x2022;&#x2022;"; // MENU ..
+  menuBtn.innerHTML = "MENU &#x2022;&#x2022;";
 
   const menuContent = document.createElement("div");
   menuContent.classList.add("menu-content");
@@ -123,8 +111,6 @@ export function loadNavbar(CurrentPageName) {
     link.setAttribute("href", page.href);
     link.innerText = page.name;
 
-    // If the link is the Projects section (hash) and we are already on Home,
-    // intercept and do smooth scroll with offset.
     if (page.href.endsWith("#projects-section") && isHome()) {
       link.addEventListener("click", (e) => {
         e.preventDefault();
@@ -137,7 +123,6 @@ export function loadNavbar(CurrentPageName) {
     menuContent.appendChild(link);
   });
 
-
   menuBtn.addEventListener("click", () => {
     menuContent.classList.toggle("show");
   });
@@ -145,12 +130,34 @@ export function loadNavbar(CurrentPageName) {
   menuWrapper.appendChild(menuBtn);
   menuWrapper.appendChild(menuContent);
 
-  // Combine all right side elements
-  rightSection.appendChild(audioBtn);
+  rightSection.appendChild(audioWrapper);
   rightSection.appendChild(talkBtn);
   rightSection.appendChild(menuWrapper);
 
   navbarContainer.appendChild(nameSection);
   navbarContainer.appendChild(rightSection);
   nav.appendChild(navbarContainer);
+
+  function triggerAudioIntro() {
+    audioBtn.classList.add("pop-in");
+    setTimeout(() => audioBtn.classList.remove("pop-in"), 900);
+
+    audioNotice.classList.add("show", "pulse");
+    setTimeout(() => audioNotice.classList.remove("pulse"), 1500);
+    setTimeout(() => audioNotice.classList.remove("show"), 3000);
+  }
+
+  const startIntro = () => setTimeout(triggerAudioIntro, 300);
+
+  window.addEventListener('site-ready', startIntro, { once: true });
+
+  if (window.__siteReady) startIntro();
+
+  window.addEventListener('load', () => {
+    if (!window.__siteReady) {
+      setTimeout(() => {
+        startIntro();
+      }, 2200);
+    }
+  }, { once: true });
 }

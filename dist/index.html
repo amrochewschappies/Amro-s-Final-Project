@@ -4,14 +4,15 @@
 <head>
   <meta charset="utf-8" />
   <title>Amro Ahmed</title>
+  <link rel="icon" type="image/png" href="images/Amros Logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
   <!-- If these files do NOT use import/export, keep them as plain scripts -->
-  <script type="module" crossorigin src="/Amro-s-Final-Project/assets/index-COumijC-.js"></script>
-  <link rel="modulepreload" crossorigin href="/Amro-s-Final-Project/assets/GLTFLoader-B2nzljLs.js">
-  <link rel="stylesheet" crossorigin href="/Amro-s-Final-Project/assets/GLTFLoader-BYZWRib-.css">
-  <link rel="stylesheet" crossorigin href="/Amro-s-Final-Project/assets/index-8hY918PE.css">
+  <script type="module" crossorigin src="/Amro-s-Final-Project/assets/index-CB7daqiz.js"></script>
+  <link rel="modulepreload" crossorigin href="/Amro-s-Final-Project/assets/RenderPass-DpzUg9Ym.js">
+  <link rel="stylesheet" crossorigin href="/Amro-s-Final-Project/assets/RenderPass-Csj1oW-4.css">
+  <link rel="stylesheet" crossorigin href="/Amro-s-Final-Project/assets/index-B_rrsjZy.css">
 </head>
 
 
@@ -62,7 +63,7 @@
       <circle cx="100" cy="120" r="86" fill="url(#gDial)" stroke="#1d1d1d" stroke-width="2" />
 
       <!-- progress arc -->
-      <path id="arc" d="M20,120 A80,80 0 0,1 180,120" fill="none" stroke="url(#gArc)" stroke-width="8"
+      <path id="arc" d="M20,120 A80,80 0 0,1 180,120" fill="none" stroke="#8F8F8F" stroke-width="8"
         stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251" />
 
       <!-- tick marks -->
@@ -85,12 +86,12 @@
 
       <!-- needle -->
       <g id="needle" transform="rotate(-90 100 120)" filter="url(#fShadow)">
-        <polygon points="100,120 98.3,120.8 100,50 101.7,120.8" fill="url(#gArc)" />
-        <circle cx="100" cy="120" r="5.5" fill="#0b0b0b" stroke="#ff4545" stroke-width="2" />
+        <polygon points="100,120 98.3,120.8 100,50 101.7,120.8" fill="#8F8F8F" />
+        <circle cx="100" cy="120" r="5.5" fill="#0b0b0b" stroke="#8F8F8F" stroke-width="2" />
       </g>
 
       <!-- label -->
-      <text x="100" y="92" font-family="Orbitron, system-ui, sans-serif" font-size="8" fill="#a9b1b1"
+      <text x="100" y="92" font-family="Orbitron, system-ui, sans-serif" font-size="8" fill="#8F8F8F"
         text-anchor="middle" opacity=".7">
         LOADING
       </text>
@@ -155,8 +156,8 @@
 
     <!-- leave this as-is; Vite will rewrite it on build -->
 
-    <section>
-      <p>created by Amro
+    <section id="footer">
+      <p>created by <a href="./AboutMe/aboutMe.html">Amro</a>
       </p>
     </section>
   </section>

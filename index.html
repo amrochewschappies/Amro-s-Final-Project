@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <title>Amro Ahmed</title>
+  <link rel="icon" type="image/png" href="images/Amros Logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./styling.css" />
   <link rel="stylesheet" href="./CSS/navigationBarStyling.css" />
@@ -66,7 +67,7 @@
       <circle cx="100" cy="120" r="86" fill="url(#gDial)" stroke="#1d1d1d" stroke-width="2" />
 
       <!-- progress arc -->
-      <path id="arc" d="M20,120 A80,80 0 0,1 180,120" fill="none" stroke="url(#gArc)" stroke-width="8"
+      <path id="arc" d="M20,120 A80,80 0 0,1 180,120" fill="none" stroke="#8F8F8F" stroke-width="8"
         stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251" />
 
       <!-- tick marks -->
@@ -89,12 +90,12 @@
 
       <!-- needle -->
       <g id="needle" transform="rotate(-90 100 120)" filter="url(#fShadow)">
-        <polygon points="100,120 98.3,120.8 100,50 101.7,120.8" fill="url(#gArc)" />
-        <circle cx="100" cy="120" r="5.5" fill="#0b0b0b" stroke="#ff4545" stroke-width="2" />
+        <polygon points="100,120 98.3,120.8 100,50 101.7,120.8" fill="#8F8F8F" />
+        <circle cx="100" cy="120" r="5.5" fill="#0b0b0b" stroke="#8F8F8F" stroke-width="2" />
       </g>
 
       <!-- label -->
-      <text x="100" y="92" font-family="Orbitron, system-ui, sans-serif" font-size="8" fill="#a9b1b1"
+      <text x="100" y="92" font-family="Orbitron, system-ui, sans-serif" font-size="8" fill="#8F8F8F"
         text-anchor="middle" opacity=".7">
         LOADING
       </text>
@@ -163,17 +164,15 @@
       const images = [
         PUB("images/FerrariBackground.png"),
         PUB("images/GroveeeeImage.png"),
-        PUB("images/MlungisiLogo.png"),
       ];
 
-      const labels = ["FERRARI-GP", "GROVEEEE-GP", "MLUNGISI-GP"];
+      const labels = ["FERRARI-GP", "GROVEEEE-GP"];
 
       const links = [
         "https://amrochewschappies.github.io/Amro-s-Ecommerce-Website/",
         "https://amrochewschappies.github.io/Dragonfly-App/",
-        "https://smash-botato.example"
       ];
-
+ 
       const transformStyles = [
         "rotate(5deg) translate(-150px)",
         "rotate(0deg) translate(-70px)",
@@ -201,8 +200,8 @@
     <!-- leave this as-is; Vite will rewrite it on build -->
     <script type="module" src="./Three.js/main.js"></script>
 
-    <section>
-      <p>created by Amro
+    <section id="footer">
+      <p>created by <a href="./AboutMe/aboutMe.html">Amro</a>
       </p>
     </section>
   </section>
