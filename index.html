@@ -5,18 +5,14 @@
   <meta charset="utf-8" />
   <title>Amro Ahmed</title>
   <link rel="icon" type="image/png" href="images/Amros Logo.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./styling.css" />
-  <link rel="stylesheet" href="./CSS/navigationBarStyling.css" />
-  <link rel="stylesheet" href="./CSS/homePageStyling.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
 
-  <script type="module">
-    import { loadNavbar } from "./Javascript/navigationBar.js";
-    loadNavbar("Home");
-  </script>
-
-  <!-- If these files do NOT use import/export, keep them as plain scripts -->
-  <script type="module" src="./Javascript/audioController.js" defer></script>
+  <!-- If these files do NOT use import/export, keep them as plain scripts -->
+  <script type="module" crossorigin src="/Amro-s-Final-Project/assets/index-CB7daqiz.js"></script>
+  <link rel="modulepreload" crossorigin href="/Amro-s-Final-Project/assets/RenderPass-DpzUg9Ym.js">
+  <link rel="stylesheet" crossorigin href="/Amro-s-Final-Project/assets/RenderPass-Csj1oW-4.css">
+  <link rel="stylesheet" crossorigin href="/Amro-s-Final-Project/assets/index-B_rrsjZy.css">
 </head>
 
 
@@ -156,49 +152,9 @@
       <div id="my-bouncecards" class="bounceCardsContainer"></div>
     </section>
 
+
 
-    <script type="module">
-      import { createBounceCards } from "./Javascript/bounceCards.js";
-      const PUB = (p) => `${import.meta.env.BASE_URL}${p}`;
-
-      const images = [
-        PUB("images/FerrariBackground.png"),
-        PUB("images/GroveeeeImage.png"),
-      ];
-
-      const labels = ["FERRARI-GP", "GROVEEEE-GP"];
-
-      const links = [
-        "https://amrochewschappies.github.io/Amro-s-Ecommerce-Website/",
-        "https://amrochewschappies.github.io/Dragonfly-App/",
-      ];
- 
-      const transformStyles = [
-        "rotate(5deg) translate(-150px)",
-        "rotate(0deg) translate(-70px)",
-        "rotate(-5deg)",
-        "rotate(5deg) translate(70px)",
-        "rotate(-5deg) translate(150px)",
-      ];
-
-      createBounceCards("#my-bouncecards", {
-        images,
-        labels,
-        links,
-        containerWidth: 500,
-        containerHeight: 250,
-        animationDelay: 1,
-        animationStagger: 0.08,
-        easeType: "elastic.out(1, 0.5)",
-        transformStyles,
-        enableHover: true,
-        clickTarget: "_blank",
-        useAnchors: false
-      });
-    </script>
-
-    <!-- leave this as-is; Vite will rewrite it on build -->
-    <script type="module" src="./Three.js/main.js"></script>
+    <!-- leave this as-is; Vite will rewrite it on build -->
 
     <section id="footer">
       <p>created by <a href="./AboutMe/aboutMe.html">Amro</a>
