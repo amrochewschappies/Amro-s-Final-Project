@@ -611,7 +611,7 @@ h1 {
 
 @media (max-width: 799px) {
   .reveals {
-    width: min(59%, 100vw);
+    width: min(75%, 100vw);
     font-size: 2.4rem;
     transform: rotateX(72deg);
     transform-origin: top center;

@@ -374,7 +374,14 @@ function clearAllBlackouts() {
   _applyBlackout();
 }
 
-const RAIN_COUNT = 15000;
+let RAIN_COUNT;
+
+if (window.innerWidth < 600){
+  RAIN_COUNT = 1000;
+}
+else{
+  RAIN_COUNT = 15000;
+}
 const RAIN_AREA = { w: 160, h: 120, d: 160 };
 const FALL_MIN = 20, FALL_MAX = 34;
 const WIND = { x: 1.2, z: -0.6 };

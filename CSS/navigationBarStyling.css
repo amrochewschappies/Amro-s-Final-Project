@@ -327,8 +327,8 @@ body {
     }
 
     .audio-icon {
-        width: 24px;
-        height: 24px;
+        width: 21px;
+        height: 21px;
     }
 
     .talk-btn {
@@ -339,17 +339,17 @@ body {
         padding: 0.2rem 1.2rem;
         font-weight: bold;
         cursor: pointer;
-        font-size: 12px;
+        font-size: 8px;
     }
 
     .menu-btn {
         background-color: #e4e4f0;
         border: none;
         border-radius: 30px;
-        padding: 0.2rem 0.7rem;
+        padding: 0.1rem 0.7rem;
         font-weight: bold;
         cursor: pointer;
-        font-size: 13px;
+        font-size: 8px;
     }
 
 
