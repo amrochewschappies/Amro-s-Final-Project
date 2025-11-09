@@ -5,17 +5,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Under the helmet</title>
-  <link rel="icon" type="image/png" href="images/Amros Logo.png" />
-  <link rel="stylesheet" href="../CSS/aboutMePageStyling.css" />
-  <link rel="stylesheet" href="../CSS/navigationBarStyling.css" />
+  <link rel="icon" type="image/png" href="images/Amros Logo.png" />
+
+  
 
-  <script type="module">
-    import { loadNavbar } from "../Javascript/navigationBar.js";
-    loadNavbar("Under The Helmet");
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./Three.js/three.module.js",
+        "three/examples/jsm/": "./Three.js/examples/jsm/"
+      }
+    }
   </script>
-  
-  <script type="module" src="../Javascript/audioController.js" defer></script>
-
+  <script type="module" crossorigin src="/Amro-s-Final-Project/assets/about-BBTTwJm2.js"></script>
+  <link rel="modulepreload" crossorigin href="/Amro-s-Final-Project/assets/RenderPass-CNbZLMJP.js">
+  <link rel="stylesheet" crossorigin href="/Amro-s-Final-Project/assets/RenderPass-COkqmyA_.css">
+  <link rel="stylesheet" crossorigin href="/Amro-s-Final-Project/assets/about-COyPFX0l.css">
 </head>
 
 <body>
@@ -26,14 +31,7 @@
   <canvas id="three-canvas"></canvas>
 
   <!-- Import map for local three.js -->
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "./Three.js/three.module.js",
-        "three/examples/jsm/": "./Three.js/examples/jsm/"
-      }
-    }
-  </script>
+
 
   <div class="about-overlay">
     <div class="corner top-left">
@@ -58,8 +56,7 @@
     </div>
   </div>
 
-  <!-- External module script -->
-  <script type="module" src="./helmetScene.js"></script>
+  <!-- External module script -->
 </body>
 
 </html>
